@@ -1,1 +1,0 @@
-{"alpha": 0.010000000000000004, "activation": "logistic", "hidden_layer_sizes": [5, 10], "solver": "lbfgs", "max_iter": 1000}

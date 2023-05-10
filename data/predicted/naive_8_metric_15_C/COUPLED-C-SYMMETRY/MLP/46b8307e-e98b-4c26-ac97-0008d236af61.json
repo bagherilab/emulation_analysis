@@ -1,1 +1,0 @@
-{"alpha": 0.0017782794100389236, "activation": "identity", "hidden_layer_sizes": [5], "solver": "lbfgs", "max_iter": 1000}
