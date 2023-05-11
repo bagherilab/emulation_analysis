@@ -16,7 +16,8 @@ export const parityPlot = (selection, props) => {
         width,
         height,
         dataC,
-        dataCH
+        dataCH,
+        area
     } = props;
 
     const innerWidth = width - margin.left - margin.right;
@@ -38,7 +39,7 @@ export const parityPlot = (selection, props) => {
         .nice();
 
 
-    const g = selection.selectAll('.container').data([null]);
+    const g = selection.selectAll('').data([null]);
     const gEnter = g
         .enter().append('g')
         .attr("class", "container");
@@ -80,6 +81,7 @@ export const parityPlot = (selection, props) => {
         .data(dataC || [], d => d.id);
 
     circlesC.exit().remove();
+
 
     if (dataC != null) {
         circlesC = g.merge(gEnter)
@@ -197,4 +199,4 @@ export const parityPlot = (selection, props) => {
     //     .text(d => d.set)
     //     .attr('font-size', '20px');
 
-};
+};    
