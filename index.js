@@ -29,89 +29,14 @@ let features = "naive"
 let response = "ACTIVITY";
 let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 let model = "MLR";
+let models = ["MLR", "RF", "SVR", "MLP"];
 let time = "0";
 
 let trueDataPathC = "data/true/C-feature_0.0_metric_15-04032023.csv";
-let predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/" + model + "/";
+let predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/combined.csv";
 let trueDataPathCH = "data/true/CH-feature_0.0_metric_15-04032023.csv";
-let predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/" + model + "/";
+let predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/combined.csv";
 
-
-const onResponseClicked = resp => {
-    response = resp;
-    // Load predicted data
-    predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/" + model + "/";
-    predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/" + model + "/";
-
-    if (showCData) {
-        loadPredData(predDataPathC).then(newData => {
-            predDataC = newData;
-        });
-    }
-    if (showCHData) {
-        loadPredData(predDataPathCH).then(newData => {
-            predDataCH = newData;
-        });
-    }
-    render();
-};
-
-const onModelClicked = mod => {
-    model = mod;
-    // Load predicted data
-    predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/" + model + "/";
-    predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/" + model + "/";
-
-    if (showCData) {
-        loadPredData(predDataPathC).then(newData => {
-            predDataC = newData;
-        });
-    }
-    if (showCHData) {
-        loadPredData(predDataPathCH).then(newData => {
-            predDataCH = newData;
-        });
-    }
-    render();
-};
-
-const onTimeClicked = t => {
-    time = t;
-    // Load predicted data
-    predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/" + model + "/";
-    predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/" + model + "/";
-
-    if (showCData) {
-        loadPredData(predDataPathC).then(newData => {
-            predDataC = newData;
-        });
-    }
-    if (showCHData) {
-        loadPredData(predDataPathCH).then(newData => {
-            predDataCH = newData;
-        });
-    }
-    render();
-};
-
-const onFeatureClicked = feat => {
-    features = feat;
-    // Load predicted data
-    predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/" + model + "/";
-    predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/" + model + "/";
-
-    if (showCData) {
-        loadPredData(predDataPathC).then(newData => {
-            predDataC = newData;
-        });
-    }
-    if (showCHData) {
-        loadPredData(predDataPathCH).then(newData => {
-            predDataCH = newData;
-        });
-    }
-    render();
-};
 
 const render = () => {
     // Dropdowns
@@ -162,7 +87,7 @@ const render = () => {
         for (let i = 0; i < trueData.length; i++) {
             combinedData.push({
                 "y_true": trueData[i][response],
-                "y_pred": predData[i]["y_pred"],
+                "y_pred": predData[i][model],
                 "set": predData[i]["set"]
             });
         }
@@ -190,49 +115,45 @@ const render = () => {
         dataC: dataC,
         dataCH: dataCH
     });
-
-
-    // Create a new button element
-    const saveButton = document.createElement('button');
-    saveButton.textContent = 'Save SVG';
-
-    // Add the button to the DOM
-    document.body.appendChild(saveButton);
-
-    // Add a click event listener to the button
-    saveButton.addEventListener('click', () => {
-        // Get the SVG element
-        const svgElement = document.querySelector('svg');
-
-        // Get the SVG markup
-        const svgMarkup = new XMLSerializer().serializeToString(svgElement);
-
-        // Create a new Blob object from the SVG markup
-        const blob = new Blob([svgMarkup], { type: 'image/svg+xml' });
-
-        // Create a URL for the Blob object
-        const url = URL.createObjectURL(blob);
-
-        // Create a new link element
-        const link = document.createElement('a');
-        link.download = 'parity_plot.svg';
-        link.href = url;
-
-        // Simulate a click on the link element to trigger the download
-        link.click();
-    });
-
 };
+
+// Create a new button element
+const saveButton = document.createElement('button');
+saveButton.textContent = 'Save SVG';
+
+// Add a click event listener to the button
+saveButton.addEventListener('click', () => {
+    // Get the SVG element
+    const svgElement = document.querySelector('svg');
+
+    // Get the SVG markup
+    const svgMarkup = new XMLSerializer().serializeToString(svgElement);
+
+    // Create a new Blob object from the SVG markup
+    const blob = new Blob([svgMarkup], { type: 'image/svg+xml' });
+
+    // Create a URL for the Blob object
+    const url = URL.createObjectURL(blob);
+
+    // Create a new link element
+    const link = document.createElement('a');
+    link.download = response + "_(" + features + "_" + time + ")_" + model + ".svg";
+    link.href = url;
+
+    // Simulate a click on the link element to trigger the download
+    link.click();
+});
 
 if (showCData) {
     const trueDataPromise = loadTrueData(trueDataPathC, responses).then(newData => {
         trueDataC = newData;
     });
-    const predDataPromise = loadPredData(predDataPathC).then(newData => {
+    const predDataPromise = loadPredData(predDataPathC, models).then(newData => {
         predDataC = newData;
     });
 
     Promise.all([trueDataPromise, predDataPromise]).then(() => {
+        console.log(predDataC)
         render();
     });
 };
@@ -241,7 +162,7 @@ if (showCHData) {
     const trueDataPromise = loadTrueData(trueDataPathCH, responses).then(newData => {
         trueDataCH = newData;
     });
-    const predDataPromise = loadPredData(predDataPathCH).then(newData => {
+    const predDataPromise = loadPredData(predDataPathCH, models).then(newData => {
         predDataCH = newData;
     });
 
@@ -251,3 +172,79 @@ if (showCHData) {
 };
 
 
+
+const onResponseClicked = resp => {
+    response = resp;
+    // Load predicted data
+    predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/combined.csv";
+    predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/combined.csv";
+
+    if (showCData) {
+        loadPredData(predDataPathC, models).then(newData => {
+            predDataC = newData;
+        });
+    }
+    if (showCHData) {
+        loadPredData(predDataPathCH, models).then(newData => {
+            predDataCH = newData;
+        });
+    }
+    render();
+};
+
+const onModelClicked = mod => {
+    model = mod;
+    // Load predicted data
+    predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/combined.csv";
+    predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/combined.csv";
+
+    if (showCData) {
+        loadPredData(predDataPathC, models).then(newData => {
+            predDataC = newData;
+        });
+    }
+    if (showCHData) {
+        loadPredData(predDataPathCH, models).then(newData => {
+            predDataCH = newData;
+        });
+    }
+    render();
+};
+
+const onTimeClicked = t => {
+    time = t;
+    // Load predicted data
+    predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/combined.csv";
+    predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/combined.csv";
+
+    if (showCData) {
+        loadPredData(predDataPathC, models).then(newData => {
+            predDataC = newData;
+        });
+    }
+    if (showCHData) {
+        loadPredData(predDataPathCH, models).then(newData => {
+            predDataCH = newData;
+        });
+    }
+    render();
+};
+
+const onFeatureClicked = feat => {
+    features = feat;
+    // Load predicted data
+    predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/combined.csv";
+    predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/combined.csv";
+
+    if (showCData) {
+        loadPredData(predDataPathC, models).then(newData => {
+            predDataC = newData;
+        });
+    }
+    if (showCHData) {
+        loadPredData(predDataPathCH, models).then(newData => {
+            predDataCH = newData;
+        });
+    }
+    render();
+};
