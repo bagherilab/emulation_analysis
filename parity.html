@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Parity Plots</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/d3@5.6.0/dist/d3.min.js"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</head>
+
+<body>
+    <p>Previous page:</p>
+    <button onclick="goBack()">Go back</button>
+    <div id="menus">
+        Response:
+        <span id="response-menu"></span>
+        Model:
+        <span id="model-menu"></span>
+        Timepoint:
+        <span id="time-menu"></span>
+        Feature:
+        <span id="feature-menu"></span>
+    </div>
+
+    <div id="checkboxes">
+        C:
+        <span id="c-checkbox"></span>
+        CH:
+        <span id="ch-checkbox"></span>
+    </div>
+
+    <svg width="800" height="800"></svg>
+    <script type="module" src="parityPlot.js"></script>
+</body>
+
+</html>

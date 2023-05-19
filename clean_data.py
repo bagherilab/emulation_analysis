@@ -1,4 +1,5 @@
 import os
+import re
 import pandas as pd
 
 # Set the folder path to the directory containing the CSV files
@@ -65,5 +66,139 @@ def combine_model_csvs():
             )
 
 
+temporal_data_path = "data/predicted/temporal"
+responses = ["ACTIVITY", "GROWTH", "SYMMETRY"]
+models = ["MLR", "RF", "SVR", "MLP"]
+
+
+def combine_temporal_r_squares():
+    combined_df = pd.DataFrame()
+    for response in responses:
+        # Create an empty DataFrame to hold the combined data
+
+        for experiment_folder in os.listdir(temporal_data_path):
+            if experiment_folder == ".DS_Store" or experiment_folder == "temporal_r2.csv":
+                continue
+
+            if "CH" in experiment_folder:
+                context = "CH"
+            else:
+                context = "C"
+
+            for response_folder in os.listdir(os.path.join(temporal_data_path, experiment_folder)):
+                if response_folder == ".DS_Store":
+                    continue
+
+                if response not in response_folder:
+                    continue
+
+                match = re.search(r"\d+", response_folder)
+                timepoint = match.group()
+
+                for model in models:
+                    test_path = os.path.join(
+                        temporal_data_path, experiment_folder, response_folder, model, "TEST"
+                    )
+                    train_path = os.path.join(
+                        temporal_data_path, experiment_folder, response_folder, model, "TRAIN"
+                    )
+
+                    for file in os.listdir(test_path):
+                        # Check if the item in the folder is a CSV file
+                        if file.endswith(".csv"):
+                            test_df = pd.read_csv(os.path.join(test_path, file))
+                            test_df["set"] = "TEST"
+                            test_df["timepoint"] = timepoint
+                            test_df["model"] = model
+                            test_df["context"] = context
+                            test_df["response"] = response
+
+                    for file in os.listdir(train_path):
+                        # Check if the item in the folder is a CSV file
+                        if file.endswith(".csv"):
+                            train_df = pd.read_csv(os.path.join(train_path, file))
+                            train_df["set"] = "TRAIN"
+                            train_df["timepoint"] = timepoint
+                            train_df["model"] = model
+                            train_df["context"] = context
+                            train_df["response"] = response
+
+                    combined_df = pd.concat([combined_df, test_df, train_df])
+
+                combined_df.to_csv(
+                    os.path.join(temporal_data_path, "temporal_r2.csv"),
+                    index=False,
+                )
+
+
+def combine_bar_plots_r_sqaures():
+    combined_df = pd.DataFrame()
+    experiment_folders = os.listdir(pred_data_path)
+    for experiment_folder in experiment_folders:
+        if (
+            experiment_folder == "temporal"
+            or experiment_folder == "quantity_experiments"
+            or experiment_folder == ".DS_Store"
+            or experiment_folder == "topo_spatial_r2.csv"
+        ):
+            continue
+
+        if "naive" in experiment_folder:
+            continue
+
+        if not re.match(r".*?0.*?15.*", experiment_folder):
+            continue
+
+        feature = experiment_folder.split("_")[0]
+
+        for response in responses:
+            if "CH" in experiment_folder:
+                context = "CH"
+            else:
+                context = "C"
+
+            for response_folder in os.listdir(os.path.join(pred_data_path, experiment_folder)):
+                if response_folder == ".DS_Store":
+                    continue
+
+                if response not in response_folder:
+                    continue
+
+                for model in models:
+                    test_path = os.path.join(
+                        pred_data_path, experiment_folder, response_folder, model, "TEST"
+                    )
+                    train_path = os.path.join(
+                        pred_data_path, experiment_folder, response_folder, model, "TRAIN"
+                    )
+
+                    for file in os.listdir(test_path):
+                        # Check if the item in the folder is a CSV file
+                        if file.endswith(".csv"):
+                            test_df = pd.read_csv(os.path.join(test_path, file))
+                            test_df["set"] = "TEST"
+                            test_df["model"] = model
+                            test_df["context"] = context
+                            test_df["response"] = response
+                            test_df["feature"] = feature
+
+                    for file in os.listdir(train_path):
+                        # Check if the item in the folder is a CSV file
+                        if file.endswith(".csv"):
+                            train_df = pd.read_csv(os.path.join(train_path, file))
+                            train_df["set"] = "TRAIN"
+                            train_df["model"] = model
+                            train_df["context"] = context
+                            train_df["response"] = response
+                            train_df["feature"] = feature
+
+                    combined_df = pd.concat([combined_df, test_df, train_df])
+
+                combined_df.to_csv(
+                    os.path.join(pred_data_path, "topo_spatial_r2.csv"),
+                    index=False,
+                )
+
+
 if __name__ == "__main__":
-    combine_model_csvs()
+    combine_bar_plots_r_sqaures()
