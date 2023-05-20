@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Bar Plots</title>
+    <title>Quantity Plots</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/d3@5.6.0/dist/d3.min.js"></script>
     <script>
@@ -16,19 +16,23 @@
     <p>Previous page:</p>
     <button onclick="goBack()">Go back</button>
     <div id="menus">
+        Response:
+        <span id="response-menu"></span>
         Model:
         <span id="model-menu"></span>
+        Feature:
+        <span id="feature-menu"></span>
     </div>
 
-    <div id="radio">
+    <div id="checkboxes">
         C:
-        <input type="radio" name="context" value="C" id="c-radio" checked>
+        <span id="c-checkbox"></span>
         CH:
-        <input type="radio" name="context" value="CH" id="ch-radio">
+        <span id="ch-checkbox"></span>
     </div>
 
     <svg width="800" height="800"></svg>
-    <script type="module" src="barPlot.js"></script>
+    <script type="module" src="quantityPlot.js"></script>
 </body>
 
 </html>

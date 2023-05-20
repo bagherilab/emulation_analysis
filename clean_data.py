@@ -200,5 +200,72 @@ def combine_bar_plots_r_sqaures():
                 )
 
 
+quantity_data_path = "data/predicted/quantity_experiments"
+
+
+def combine_quantity_r_squares():
+    combined_df = pd.DataFrame()
+    for response in responses:
+        # Create an empty DataFrame to hold the combined data
+
+        for experiment_folder in os.listdir(quantity_data_path):
+            if experiment_folder == ".DS_Store" or experiment_folder == "quantity_r2.csv":
+                continue
+
+            if "CH" in experiment_folder:
+                context = "CH"
+            else:
+                context = "C"
+
+            feature = experiment_folder.split("_")[0]
+            timepoint = experiment_folder.split("_")[1]
+
+            for response_folder in os.listdir(os.path.join(quantity_data_path, experiment_folder)):
+                if response_folder == ".DS_Store":
+                    continue
+
+                if response not in response_folder:
+                    continue
+
+                for model in models:
+                    test_path = os.path.join(
+                        quantity_data_path, experiment_folder, response_folder, model, "TEST"
+                    )
+                    train_path = os.path.join(
+                        quantity_data_path, experiment_folder, response_folder, model, "TRAIN"
+                    )
+
+                    for file in os.listdir(test_path):
+                        # Check if the item in the folder is a CSV file
+                        if file.endswith(".csv"):
+                            test_df = pd.read_csv(os.path.join(test_path, file))
+                            test_df["num_observations"] = round(test_df["num_observations"] / 0.3)
+                            test_df["set"] = "TEST"
+                            test_df["timepoint"] = timepoint
+                            test_df["model"] = model
+                            test_df["context"] = context
+                            test_df["response"] = response
+                            test_df["feature"] = feature
+
+                    for file in os.listdir(train_path):
+                        # Check if the item in the folder is a CSV file
+                        if file.endswith(".csv"):
+                            train_df = pd.read_csv(os.path.join(train_path, file))
+                            train_df["num_observations"] = round(train_df["num_observations"] / 0.7)
+                            train_df["set"] = "TRAIN"
+                            train_df["timepoint"] = timepoint
+                            train_df["model"] = model
+                            train_df["context"] = context
+                            train_df["response"] = response
+                            train_df["feature"] = feature
+
+                    combined_df = pd.concat([combined_df, test_df, train_df])
+
+                combined_df.to_csv(
+                    os.path.join(quantity_data_path, "quantity_r2.csv"),
+                    index=False,
+                )
+
+
 if __name__ == "__main__":
-    combine_bar_plots_r_sqaures()
+    combine_quantity_r_squares()

@@ -27,6 +27,23 @@ export const loadTrueData = (trueDataPath, responses) => {
     });
 };
 
+export const loadQuantityData = (data_path) => {
+    return csv(data_path).then(loadedData => {
+        const data = loadedData;
+        data.forEach(d => {
+            d["R^2"] = +d["R^2"];
+            d["num_observations"] = +d["num_observations"];
+            d["timepoint"] = +d["timepoint"];
+            d["set"] = d["set"];
+            d["model"] = d["model"];
+            d["context"] = d["context"];
+            d["response"] = d["response"];
+            d["feature"] = d["feature"];
+        });
+        return data;
+    })
+};
+
 export const loadTemporalData = (data_path) => {
     return csv(data_path).then(loadedData => {
         const data = loadedData;
@@ -37,6 +54,21 @@ export const loadTemporalData = (data_path) => {
             d["model"] = d["model"];
             d["context"] = d["context"];
             d["response"] = d["response"];
+        });
+        return data;
+    })
+};
+
+export const loadBarData = (data_path) => {
+    return csv(data_path).then(loadedData => {
+        const data = loadedData;
+        data.forEach(d => {
+            d["R^2"] = +d["R^2"];
+            d["set"] = d["set"];
+            d["model"] = d["model"];
+            d["context"] = d["context"];
+            d["response"] = d["response"];
+            d["feature"] = d["feature"];
         });
         return data;
     })
