@@ -267,5 +267,41 @@ def combine_quantity_r_squares():
                 )
 
 
+ci_path = "data/predicted/temporal_ci.csv"
+
+
+def explode_ci():
+    data = pd.read_csv(ci_path)
+    train_data = data.copy()
+    train_data["set"] = "TRAIN"
+    test_data = data.copy()
+    test_data["set"] = "TEST"
+
+    train_data.rename(columns={"train_mean": "R^2"}, inplace=True)
+    train_ci = train_data["train_ci"]
+    ci_values = train_ci.str.strip("[]")
+    ci_values = ci_values.str.split(r"\s+")
+
+    train_data["ci_lower"] = ci_values.apply(lambda x: x[0])
+    train_data["ci_upper"] = ci_values.apply(lambda x: x[1])
+
+    test_data.rename(columns={"test_mean": "R^2"}, inplace=True)
+    test_ci = test_data["test_ci"]
+    ci_values = test_ci.str.strip("[]")
+    ci_values = ci_values.str.split(r"\s+")
+
+    test_data["ci_lower"] = ci_values.apply(lambda x: x[0])
+    test_data["ci_upper"] = ci_values.apply(lambda x: x[1])
+
+    # Concatenate train and test dataframes
+    new_data = pd.concat([train_data, test_data], ignore_index=True)
+
+    new_data.drop(columns=["train_mean", "test_mean"], inplace=True)
+    new_data.drop(columns=["train_ci", "test_ci"], inplace=True)
+
+    # Save the transformed data to a new CSV file
+    new_data.to_csv("data/predicted/transformed_temporal_ci.csv", index=False)
+
+
 if __name__ == "__main__":
-    combine_quantity_r_squares()
+    explode_ci()
