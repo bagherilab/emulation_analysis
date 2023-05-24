@@ -4,7 +4,7 @@ import {
 
 import { dropDownMenu } from './dropdown.js';
 import { checkBox } from './checkbox.js';
-import { temporalPlotCI } from './plotting.js';
+import { linePlot } from './plotting.js';
 import { loadTemporalCIData } from './csvLoader.js';
 
 const svg = select('svg');
@@ -91,7 +91,7 @@ const render = () => {
     let filteredData = filterData(rawData);
 
     // Plot
-    svg.call(temporalPlotCI, {
+    svg.call(linePlot, {
         xValue: d => d["timepoint"],
         yValue: d => d["R^2"],
         margin: { top: 60, right: 40, bottom: 88, left: 150 },

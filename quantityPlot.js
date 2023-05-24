@@ -4,7 +4,7 @@ import {
 
 import { dropDownMenu } from './dropdown.js';
 import { checkBox } from './checkbox.js';
-import { quantityPlotCI } from './plotting.js';
+import { linePlot } from './plotting.js';
 import { loadQuantityCIData } from './csvLoader.js';
 
 const svg = select('svg');
@@ -93,7 +93,7 @@ const render = () => {
     let filteredData = filterData(rawData);
 
     // Plot
-    svg.call(quantityPlotCI, {
+    svg.call(linePlot, {
         xValue: d => d["num_observations"],
         yValue: d => d["R^2"],
         margin: { top: 60, right: 40, bottom: 88, left: 150 },
