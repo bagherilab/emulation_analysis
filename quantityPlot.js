@@ -4,8 +4,8 @@ import {
 
 import { dropDownMenu } from './dropdown.js';
 import { checkBox } from './checkbox.js';
-import { quantityPlot } from './plotting.js';
-import { loadQuantityData } from './csvLoader.js';
+import { quantityPlotCI } from './plotting.js';
+import { loadQuantityCIData } from './csvLoader.js';
 
 const svg = select('svg');
 
@@ -24,7 +24,7 @@ let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 let model = "MLR";
 let models = ["MLR", "RF", "SVR", "MLP"];
 
-let dataPath = "data/predicted/quantity_experiments/quantity_r2.csv"
+let dataPath = "data/predicted/transformed_quant_ci.csv"
 
 const render = () => {
     // Save button
@@ -93,7 +93,7 @@ const render = () => {
     let filteredData = filterData(rawData);
 
     // Plot
-    svg.call(quantityPlot, {
+    svg.call(quantityPlotCI, {
         xValue: d => d["num_observations"],
         yValue: d => d["R^2"],
         margin: { top: 60, right: 40, bottom: 88, left: 150 },
@@ -131,7 +131,7 @@ saveButton.addEventListener('click', () => {
 });
 
 // Load data
-const dataPromise = loadQuantityData(dataPath).then(newData => {
+const dataPromise = loadQuantityCIData(dataPath).then(newData => {
     rawData = newData;
 });
 Promise.all([dataPromise]).then(() => { render(); });

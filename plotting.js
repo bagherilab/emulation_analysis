@@ -296,7 +296,7 @@ export const barPlot = (selection, props) => {
                 .attr("y", topo_train)
                 .attr("width", xScale.bandwidth() / 2)
                 .attr("height", height1)
-                .attr("fill", "steelblue");
+                .attr("fill", getColor("C-TRAIN"));
 
             d3.select(this)
                 .append("rect")
@@ -305,7 +305,7 @@ export const barPlot = (selection, props) => {
                 .attr("y", spatial_train)
                 .attr("width", xScale.bandwidth() / 2)
                 .attr("height", height2)
-                .attr("fill", "orange");
+                .attr("fill", getColor("CH-TRAIN"));
 
             // Plot the test R^2 values on top of the bars
             const topo_test = yScale(topo_test_value);
@@ -320,7 +320,7 @@ export const barPlot = (selection, props) => {
                 .attr("y", topo_test)
                 .attr("width", xScale.bandwidth() / 2)
                 .attr("height", height3)
-                .attr("fill", "rgba(0, 0, 0, 0.5)");
+                .attr("fill", getColor("C-TEST"));
 
             d3.select(this)
                 .append("rect")
@@ -329,7 +329,7 @@ export const barPlot = (selection, props) => {
                 .attr("y", spatial_test)
                 .attr("width", xScale.bandwidth() / 2)
                 .attr("height", height4)
-                .attr("fill", "rgba(0, 0, 0, 0.5)");
+                .attr("fill", getColor("CH-TEST"));
         }
     });
 
@@ -548,6 +548,215 @@ export const temporalPlot = (selection, props) => {
 
 };
 
+export const quantityPlotCI = (selection, props) => {
+    const {
+        xValue,
+        yValue,
+        margin,
+        width,
+        height,
+        data,
+    } = props;
+
+    const sortedData = data.sort((a, b) => xValue(a) - xValue(b));
+
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    const xScale = d3.scaleLinear()
+        .domain(d3.extent(sortedData, xValue))
+        .range([0, innerWidth])
+        .nice();
+
+    const yScale = d3.scaleLinear()
+        .domain(d3.extent(sortedData, yValue))
+        .range([innerHeight, 0])
+        .nice();
+
+    const lineGenerator = d3.line()
+        .x(d => xScale(xValue(d)))
+        .y(d => yScale(yValue(d)));
+
+    const intervalGenerator = d3.area()
+        .x(d => xScale(xValue(d)))
+        .y0(d => yScale(d.ci_lower))
+        .y1(d => yScale(d.ci_upper));
+
+    const nestedData = d3.nest()
+        .key(d => d.context)
+        .key(d => d.set)
+        .entries(sortedData);
+
+    const linesData = nestedData.flatMap(contextData =>
+        contextData.values.flatMap(setData => {
+            const key = `${contextData.key}-${setData.key}`;
+            return {
+                key,
+                values: setData.values,
+            };
+        })
+    );
+
+    const g = selection.selectAll('.container').data([null]);
+    const gEnter = g.enter().append('g')
+        .attr('class', 'container');
+    gEnter.merge(g)
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const lines = g.merge(gEnter)
+        .selectAll('.line')
+        .data(linesData, d => d.key);
+
+    lines.exit().remove();
+
+    lines.enter().append('path')
+        .attr('class', 'interval')
+        .merge(lines)
+        .attr('d', d => intervalGenerator(d.values))
+        .attr('fill', d => getIntervalColor(d.key))
+
+    lines.enter().append('path')
+        .attr('class', 'line')
+        .merge(lines)
+        .attr('d', d => lineGenerator(d.values))
+        .attr('fill', 'none')
+        .attr('stroke', d => getColor(d.key))
+        .attr('stroke-width', 3);
+
+    const xAxis = axisBottom(xScale)
+        .tickSize(-innerHeight)
+        .tickPadding(15);
+
+    const yAxis = axisLeft(yScale)
+        .tickSize(-innerWidth)
+        .tickPadding(10);
+
+    const yAxisG = g.select('.y-axis');
+    const yAxisGEnter = gEnter
+        .append('g')
+        .attr("class", "y-axis")
+        .call(d3.axisLeft(yScale).ticks(".1f"));
+    yAxisG
+        .merge(yAxisGEnter)
+        .call(yAxis)
+        .selectAll('.domain').remove();
+
+    const xAxisG = g.select('.x-axis');
+    const xAxisGEnter = gEnter
+        .append('g')
+        .attr("class", "x-axis");
+    xAxisG
+        .merge(xAxisGEnter)
+        .attr('transform', `translate(0,${innerHeight})`)
+        .call(xAxis)
+        .selectAll('.domain').remove();
+};
+
+export const temporalPlotCI = (selection, props) => {
+    const {
+        xValue,
+        yValue,
+        margin,
+        width,
+        height,
+        data,
+    } = props;
+
+    const sortedData = data.sort((a, b) => xValue(a) - xValue(b));
+
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    const xScale = d3.scaleLinear()
+        .domain(d3.extent(sortedData, xValue))
+        .range([0, innerWidth])
+        .nice();
+
+    const yScale = d3.scaleLinear()
+        .domain(d3.extent(sortedData, yValue))
+        .range([innerHeight, 0])
+        .nice();
+
+    const lineGenerator = d3.line()
+        .x(d => xScale(xValue(d)))
+        .y(d => yScale(yValue(d)));
+
+    const intervalGenerator = d3.area()
+        .x(d => xScale(xValue(d)))
+        .y0(d => yScale(d.ci_lower))
+        .y1(d => yScale(d.ci_upper));
+
+    const nestedData = d3.nest()
+        .key(d => d.context)
+        .key(d => d.set)
+        .entries(sortedData);
+
+    const linesData = nestedData.flatMap(contextData =>
+        contextData.values.flatMap(setData => {
+            const key = `${contextData.key}-${setData.key}`;
+            return {
+                key,
+                values: setData.values,
+            };
+        })
+    );
+
+    const g = selection.selectAll('.container').data([null]);
+    const gEnter = g.enter().append('g')
+        .attr('class', 'container');
+    gEnter.merge(g)
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const lines = g.merge(gEnter)
+        .selectAll('.line')
+        .data(linesData, d => d.key);
+
+    lines.exit().remove();
+
+    lines.enter().append('path')
+        .attr('class', 'interval')
+        .merge(lines)
+        .attr('d', d => intervalGenerator(d.values))
+        .attr('fill', d => getIntervalColor(d.key))
+
+    lines.enter().append('path')
+        .attr('class', 'line')
+        .merge(lines)
+        .attr('d', d => lineGenerator(d.values))
+        .attr('fill', 'none')
+        .attr('stroke', d => getColor(d.key))
+        .attr('stroke-width', 3);
+
+    const xAxis = axisBottom(xScale)
+        .tickSize(-innerHeight)
+        .tickPadding(15);
+
+    const yAxis = axisLeft(yScale)
+        .tickSize(-innerWidth)
+        .tickPadding(10);
+
+    const yAxisG = g.select('.y-axis');
+    const yAxisGEnter = gEnter
+        .append('g')
+        .attr("class", "y-axis")
+        .call(d3.axisLeft(yScale).ticks(".1f"));
+    yAxisG
+        .merge(yAxisGEnter)
+        .call(yAxis)
+        .selectAll('.domain').remove();
+
+    const xAxisG = g.select('.x-axis');
+    const xAxisGEnter = gEnter
+        .append('g')
+        .attr("class", "x-axis");
+    xAxisG
+        .merge(xAxisGEnter)
+        .attr('transform', `translate(0,${innerHeight})`)
+        .call(xAxis)
+        .selectAll('.domain').remove();
+
+};
+
 const getColor = key => {
     const colorMap = {
         'C-TEST': '#009fff',
@@ -557,3 +766,13 @@ const getColor = key => {
     };
     return colorMap[key] || 'black';
 };
+
+const getIntervalColor = key => {
+    const colorMap = {
+        'C-TEST': '#7fdfff',
+        'C-TRAIN': '#d8d6d9',
+        'CH-TEST': '#7d7dff',
+        'CH-TRAIN': '#9f9c9a'
+    };
+    return colorMap[key] || 'gray';
+}

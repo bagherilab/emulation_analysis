@@ -303,5 +303,19 @@ def explode_ci():
     new_data.to_csv("data/predicted/transformed_temporal_ci.csv", index=False)
 
 
+formatted_path = "data/predicted/transformed_quant_ci.csv"
+
+
+def format_floats():
+    data = pd.read_csv(formatted_path)
+    data["ci_lower"] = data["ci_lower"].astype(float)
+    data["ci_upper"] = data["ci_upper"].astype(float)
+
+    data["ci_lower"] = data["ci_lower"].map("{:.10f}".format)
+    data["ci_upper"] = data["ci_upper"].map("{:.10f}".format)
+
+    data.to_csv("data/predicted/transformed_quant_ci.csv", index=False)
+
+
 if __name__ == "__main__":
-    explode_ci()
+    format_floats()

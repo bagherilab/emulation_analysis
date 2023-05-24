@@ -4,8 +4,8 @@ import {
 
 import { dropDownMenu } from './dropdown.js';
 import { checkBox } from './checkbox.js';
-import { temporalPlot } from './plotting.js';
-import { loadTemporalData } from './csvLoader.js';
+import { temporalPlotCI } from './plotting.js';
+import { loadTemporalCIData } from './csvLoader.js';
 
 const svg = select('svg');
 
@@ -23,7 +23,7 @@ let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 let model = "MLR";
 let models = ["MLR", "RF", "SVR", "MLP"];
 
-let dataPath = "data/predicted/temporal/temporal_r2.csv"
+let dataPath = "data/predicted/transformed_temporal_ci.csv"
 
 const render = () => {
     // Save button
@@ -91,7 +91,7 @@ const render = () => {
     let filteredData = filterData(rawData);
 
     // Plot
-    svg.call(temporalPlot, {
+    svg.call(temporalPlotCI, {
         xValue: d => d["timepoint"],
         yValue: d => d["R^2"],
         margin: { top: 60, right: 40, bottom: 88, left: 150 },
@@ -129,7 +129,7 @@ saveButton.addEventListener('click', () => {
 });
 
 // Load data
-const dataPromise = loadTemporalData(dataPath).then(newData => {
+const dataPromise = loadTemporalCIData(dataPath).then(newData => {
     rawData = newData;
 });
 Promise.all([dataPromise]).then(() => { render(); });
