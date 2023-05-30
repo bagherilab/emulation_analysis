@@ -267,7 +267,8 @@ def combine_quantity_r_squares():
                 )
 
 
-ci_path = "data/predicted/temporal_ci.csv"
+ci_path = "data/predicted/quant_se.csv"
+formatted_path = "data/predicted/transformed_quant_se.csv"
 
 
 def explode_ci():
@@ -278,32 +279,29 @@ def explode_ci():
     test_data["set"] = "TEST"
 
     train_data.rename(columns={"train_mean": "R^2"}, inplace=True)
-    train_ci = train_data["train_ci"]
-    ci_values = train_ci.str.strip("[]")
-    ci_values = ci_values.str.split(r"\s+")
+    train_ci = train_data["train_se"]
+    # ci_values = train_ci.str.strip("[]")
+    # ci_values = ci_values.str.split(r"\s+")
 
-    train_data["ci_lower"] = ci_values.apply(lambda x: x[0])
-    train_data["ci_upper"] = ci_values.apply(lambda x: x[1])
+    train_data["se_lower"] = train_data["R^2"] - train_ci
+    train_data["se_upper"] = train_data["R^2"] + train_ci
 
     test_data.rename(columns={"test_mean": "R^2"}, inplace=True)
-    test_ci = test_data["test_ci"]
-    ci_values = test_ci.str.strip("[]")
-    ci_values = ci_values.str.split(r"\s+")
+    test_ci = test_data["test_se"]
+    # ci_values = test_ci.str.strip("[]")
+    # ci_values = ci_values.str.split(r"\s+")
 
-    test_data["ci_lower"] = ci_values.apply(lambda x: x[0])
-    test_data["ci_upper"] = ci_values.apply(lambda x: x[1])
+    test_data["se_lower"] = test_data["R^2"] - test_ci
+    test_data["se_upper"] = test_data["R^2"] + test_ci
 
     # Concatenate train and test dataframes
     new_data = pd.concat([train_data, test_data], ignore_index=True)
 
     new_data.drop(columns=["train_mean", "test_mean"], inplace=True)
-    new_data.drop(columns=["train_ci", "test_ci"], inplace=True)
+    new_data.drop(columns=["train_se", "test_se"], inplace=True)
 
     # Save the transformed data to a new CSV file
-    new_data.to_csv("data/predicted/transformed_temporal_ci.csv", index=False)
-
-
-formatted_path = "data/predicted/transformed_quant_ci.csv"
+    new_data.to_csv(formatted_path, index=False)
 
 
 def format_floats():
@@ -314,8 +312,16 @@ def format_floats():
     data["ci_lower"] = data["ci_lower"].map("{:.10f}".format)
     data["ci_upper"] = data["ci_upper"].map("{:.10f}".format)
 
-    data.to_csv("data/predicted/transformed_quant_ci.csv", index=False)
+    data.to_csv(formatted_path, index=False)
+
+
+def remove_50_obs():
+    data = pd.read_csv(formatted_path)
+    data = data[data["num_observations"] != 50]
+    data.to_csv("data/predicted/transformed_quant_se_50.csv", index=False)
 
 
 if __name__ == "__main__":
-    format_floats()
+    # explode_ci()
+    # format_floats()
+    remove_50_obs()

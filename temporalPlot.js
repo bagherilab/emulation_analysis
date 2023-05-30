@@ -5,7 +5,7 @@ import {
 import { dropDownMenu } from './dropdown.js';
 import { checkBox } from './checkbox.js';
 import { linePlot } from './plotting.js';
-import { loadTemporalCIData } from './csvLoader.js';
+import { loadTemporalData } from './csvLoader.js';
 
 const svg = select('svg');
 
@@ -23,13 +23,41 @@ let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 let model = "MLR";
 let models = ["MLR", "RF", "SVR", "MLP"];
 
-let dataPath = "data/predicted/transformed_temporal_ci.csv"
+let dataPath = "data/predicted/transformed_temporal_se.csv"
+
+const saveButtonId = 'saveButton';
 
 const render = () => {
     // Save button
-    if (!document.querySelector('button')) {
+    if (!document.getElementById(saveButtonId)) {
+        const saveButton = document.createElement('button');
+        saveButton.id = saveButtonId;
+        saveButton.textContent = 'Save SVG';
+
+        // Add a click event listener to the button
+        saveButton.addEventListener('click', () => {
+            // Get the SVG element
+            const svgElement = document.querySelector('svg');
+
+            // Get the SVG markup
+            const svgMarkup = new XMLSerializer().serializeToString(svgElement);
+
+            // Create a new Blob object from the SVG markup
+            const blob = new Blob([svgMarkup], { type: 'image/svg+xml' });
+
+            // Create a URL for the Blob object
+            const url = URL.createObjectURL(blob);
+
+            // Create a new link element
+            const link = document.createElement('a');
+            link.download = "temp_plot_" + response + "_(" + features + ")_" + model + ".svg";
+            link.href = url;
+
+            // Simulate a click on the link element to trigger the download
+            link.click();
+        });
         document.body.appendChild(saveButton);
-    }
+    };
 
     // Dropdowns
     select("#response-menu")
@@ -91,45 +119,31 @@ const render = () => {
     let filteredData = filterData(rawData);
 
     // Plot
+    const margin = { top: 60, right: 40, bottom: 88, left: 150 }
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
     svg.call(linePlot, {
         xValue: d => d["timepoint"],
         yValue: d => d["R^2"],
-        margin: { top: 60, right: 40, bottom: 88, left: 150 },
-        width: width,
-        height: height,
+        margin: margin,
+        innerWidth: innerWidth,
+        innerHeight: innerHeight,
         data: filteredData,
     });
+
+    svg.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", innerWidth)
+        .attr("height", innerHeight)
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", "1px");
 };
 
-// Create a new button element
-const saveButton = document.createElement('button');
-saveButton.textContent = 'Save SVG';
-
-// Add a click event listener to the button
-saveButton.addEventListener('click', () => {
-    // Get the SVG element
-    const svgElement = document.querySelector('svg');
-
-    // Get the SVG markup
-    const svgMarkup = new XMLSerializer().serializeToString(svgElement);
-
-    // Create a new Blob object from the SVG markup
-    const blob = new Blob([svgMarkup], { type: 'image/svg+xml' });
-
-    // Create a URL for the Blob object
-    const url = URL.createObjectURL(blob);
-
-    // Create a new link element
-    const link = document.createElement('a');
-    link.download = response + "_(" + features + "_" + time + ")_" + model + ".svg";
-    link.href = url;
-
-    // Simulate a click on the link element to trigger the download
-    link.click();
-});
-
 // Load data
-const dataPromise = loadTemporalCIData(dataPath).then(newData => {
+const dataPromise = loadTemporalData(dataPath).then(newData => {
     rawData = newData;
 });
 Promise.all([dataPromise]).then(() => { render(); });
