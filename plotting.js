@@ -18,6 +18,8 @@ export const parityPlot = (selection, props) => {
         data
     } = props;
 
+    selection.selectAll('*').remove();
+
     const g = selection.selectAll('.container').data([null]);
     const gEnter = g
         .enter().append('g')
@@ -49,7 +51,6 @@ export const parityPlot = (selection, props) => {
         .attr('x2', xScale.range()[1])
         .attr('y2', yScale.range()[1]);
 
-
     var markers = g.merge(gEnter)
         .selectAll('.dot')
         .data(data, d => d.id);
@@ -57,7 +58,7 @@ export const parityPlot = (selection, props) => {
     markers.exit().remove();
 
     markers.enter().append('g')
-        .attr('class', d => d.context === "C" ? 'dot-c' : 'dot-ch') // Add class conditionally
+        .attr('class', '.dot')
         .merge(markers)
         .attr('transform', d => `translate(${xScale(xValue(d))},${yScale(yValue(d))})`)
         .each(function (d) {
@@ -76,7 +77,6 @@ export const parityPlot = (selection, props) => {
                     .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()));
             }
         })
-
         .attr("opacity", 0.4);
 
     const xAxis = axisBottom(xScale)
@@ -281,6 +281,9 @@ export const linePlot = (selection, props) => {
 
     const sortedData = data.sort((a, b) => xValue(a) - xValue(b));
 
+    // const showXAxis = document.getElementById('xAxisCheckbox').checked;
+    // const showYAxis = document.getElementById('yAxisCheckbox').checked;
+
     const g = selection.selectAll('.container').data([null]);
     const gEnter = g.enter().append('g')
         .attr('class', 'container');
@@ -302,10 +305,6 @@ export const linePlot = (selection, props) => {
             .domain([minValue, breakPoint, -0.1, maxValue])
             .range([innerHeight, innerHeight / 1.3 + 1, innerHeight / 1.3 - 1, 0]);
     } else {
-        // yScale = d3.scaleLinear()
-        // .domain([minValue, d3.max(sortedData, yValue)])
-        // .range([innerHeight, 0])
-        // .nice();
         yScale = d3.scaleLinear()
             .domain([-0.3, 1.0])
             .range([innerHeight, 0])
@@ -370,18 +369,29 @@ export const linePlot = (selection, props) => {
 
     const xAxis = axisBottom(xScale)
         // .tickValues([0, 2, 4, 6, 8, 10, 12, 14])
-        .tickValues([100, 200, 300, 400, 500])
+        // .tickValues([100, 200, 300, 400, 500])
         .tickFormat(d3.format(".0f"))
-        // .ticks(0)
+        .ticks(4)
         .tickSize(0)
         .tickPadding(10);
 
-    const yAxis = axisLeft(yScale)
-        .tickValues([-10.0, 0.0, 0.2, 0.4, 0.6, 0.8])
-        // .ticks(5)
-        .tickFormat(d3.format(".1f"))
-        .tickSize(0)
-        .tickPadding(10);
+    let yAxis;
+    if (minValue < breakPoint) {
+        yAxis = axisLeft(yScale)
+            .tickValues([minValue, (minValue / 2), 0.0, 0.2, 0.4, 0.6, 0.8])
+            // .ticks(0)
+            .tickFormat(d3.format(".1f"))
+            .tickSize(0)
+            .tickPadding(10);
+    } else {
+        yAxis = axisLeft(yScale)
+            .ticks(4)
+            // .ticks(0)
+            .tickFormat(d3.format(".1f"))
+            .tickSize(0)
+            .tickPadding(10);
+    }
+
 
     const yAxisG = g.select('.y-axis');
     const yAxisGEnter = gEnter
@@ -408,7 +418,6 @@ export const linePlot = (selection, props) => {
         .attr("font-size", "50px")
         .selectAll('.domain, .tick line')
         .remove();
-
 
     // make a black box around the svg
     const outline = g.merge(gEnter)
@@ -443,7 +452,7 @@ export const linePlot = (selection, props) => {
             .attr('width', 20)
             .attr('height', (d, i) => i === 0 ? 12 : 6)
             .attr('fill', (d, i) => i === 1 ? 'white' : 'black')
-            .attr('y', (d, i) => i === 0 ? innerHeight / 1.2 : innerHeight / 1.2 + 3);
+            .attr('y', (d, i) => i === 0 ? innerHeight / 1.3 : innerHeight / 1.3 + 3);
     }
 
 };

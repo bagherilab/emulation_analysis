@@ -421,8 +421,8 @@ def format_parity():
 
 
 if __name__ == "__main__":
-    # explode_ci()
+    explode_ci()
     # format_floats()
     # remove_50_obs()
-    parity_plot_data()
-    format_parity()
+    # parity_plot_data()
+    # format_parity()
