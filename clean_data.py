@@ -321,7 +321,108 @@ def remove_50_obs():
     data.to_csv("data/predicted/transformed_quant_se_50.csv", index=False)
 
 
+features = ["naive", "topo", "spatial"]
+responses = ["ACTIVITY", "GROWTH", "SYMMETRY"]
+timepoints = [0, 8, 15]
+contexts = ["C", "CH"]
+
+
+def parity_plot_data():
+    combined_data = pd.DataFrame()
+    for feature in features:
+        for response in responses:
+            for time in timepoints:
+                pred_data_path_C = (
+                    "data/predicted/"
+                    + feature
+                    + "_"
+                    + str(time)
+                    + "_metric_15_C/COUPLED-C-"
+                    + response
+                    + "/combined.csv"
+                )
+
+                true_data_path_C = (
+                    "data/predicted/"
+                    + feature
+                    + "_"
+                    + str(time)
+                    + "_metric_15_C/COUPLED-C-"
+                    + response
+                    + "/test.csv"
+                )
+
+                C_data = pd.read_csv(true_data_path_C)
+
+                pred_data_C = pd.read_csv(pred_data_path_C)
+                pred_data_C["feature"] = feature
+                pred_data_C["response"] = response
+                pred_data_C["timepoint"] = time
+                pred_data_C["context"] = "C"
+                pred_data_C["y_true"] = C_data[response]
+                pred_data_C.drop("Unnamed: 0", axis=1, inplace=True)
+
+                pred_data_path_CH = (
+                    "data/predicted/"
+                    + feature
+                    + "_"
+                    + str(time)
+                    + "_metric_15_CH/COUPLED-CHX-"
+                    + response
+                    + "/combined.csv"
+                )
+
+                true_data_path_CH = (
+                    "data/predicted/"
+                    + feature
+                    + "_"
+                    + str(time)
+                    + "_metric_15_CH/COUPLED-CHX-"
+                    + response
+                    + "/test.csv"
+                )
+
+                CH_data = pd.read_csv(true_data_path_CH)
+
+                pred_data_CH = pd.read_csv(pred_data_path_CH)
+                pred_data_CH["feature"] = feature
+                pred_data_CH["response"] = response
+                pred_data_CH["timepoint"] = time
+                pred_data_CH["context"] = "CH"
+                pred_data_CH["y_true"] = CH_data[response]
+                pred_data_CH.drop("Unnamed: 0", axis=1, inplace=True)
+
+                true_and_pred_combined = pd.concat([pred_data_C, pred_data_CH])
+                combined_data = pd.concat([combined_data, true_and_pred_combined])
+
+    combined_data.to_csv("data/predicted/parity_r2.csv", index=False)
+
+
+def format_parity():
+    df = pd.read_csv("data/predicted/parity_r2.csv")
+    id_vars = [
+        "context",
+        "set",
+        "feature",
+        "response",
+        "timepoint",
+        "y_true",
+    ]
+    value_vars = ["SVR", "MLR", "RF", "MLP"]
+
+    # Reshape the dataframe
+    melted_df = pd.melt(df, id_vars=id_vars, value_vars=value_vars, var_name="model")
+
+    # Reset the index
+    melted_df = melted_df.reset_index(drop=True)
+    melted_df.rename(columns={"value": "y_pred"}, inplace=True)
+
+    melted_df.to_csv("data/predicted/parity_formatted_r2.csv", index=False)
+
+
 if __name__ == "__main__":
     # explode_ci()
     # format_floats()
-    remove_50_obs()
+    # remove_50_obs()
+    parity_plot_data()
+    format_parity()

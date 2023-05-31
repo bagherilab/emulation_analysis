@@ -2,29 +2,18 @@ import {
     csv,
 } from 'https://cdn.skypack.dev/d3@5.16.0';
 
-export const loadParityPredData = (predDataPath, models) => {
-    return csv(predDataPath).then(loadedData => {
+export const loadParityData = (data_path) => {
+    return csv(data_path).then(loadedData => {
         const data = loadedData;
         data.forEach(d => {
-            models.forEach(model => {
-                d[model] = +d[model];
-            });
-            d["set"] = d["set"];
+            d["ACTIVITY"] = +d["ACTIVITY"];
+            d["GROWTH"] = +d["GROWTH"];
+            d["SYMMETRY"] = +d["SYMMETRY"];
+            d["timepoint"] = +d["timepoint"];
+            d["R^2"] = +d["R^2"];
         });
         return data;
-    });
-};
-
-export const loadParityTrueData = (trueDataPath, responses) => {
-    return csv(trueDataPath).then(loadedData => {
-        const data = loadedData;
-        data.forEach(d => {
-            responses.forEach(response => {
-                d[response] = +d[response];
-            });
-        });
-        return data;
-    });
+    })
 };
 
 

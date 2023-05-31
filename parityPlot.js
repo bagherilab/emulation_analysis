@@ -5,7 +5,7 @@ import {
 import { dropDownMenu } from './dropdown.js';
 import { checkBox } from './checkbox.js';
 import { parityPlot } from './plotting.js';
-import { loadParityTrueData, loadParityPredData } from './csvLoader.js';
+import { loadParityData } from './csvLoader.js';
 
 const svg = select('svg');
 
@@ -15,22 +15,18 @@ const height = +svg.attr('height');
 let showCData = true;
 let showCHData = true;
 
-let trueDataC;
-let predDataC;
-let trueDataCH;
-let predDataCH;
+let rawData;
 
-let features = "naive"
+let feature = "topo";
+let features = ["topo", "naive", "spatial"]
 let response = "ACTIVITY";
 let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 let model = "MLR";
 let models = ["MLR", "RF", "SVR", "MLP"];
 let time = "0";
+let times = ["0", "8", "15"];
 
-let trueDataPathC = "data/true/C-feature_0.0_metric_15-04032023.csv";
-let predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/combined.csv";
-let trueDataPathCH = "data/true/CH-feature_0.0_metric_15-04032023.csv";
-let predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/combined.csv";
+let dataPath = "data/predicted/parity_formatted_r2.csv"
 
 const saveButtonId = 'saveButton';
 
@@ -57,7 +53,7 @@ const render = () => {
 
             // Create a new link element
             const link = document.createElement('a');
-            link.download = "parity_plot_" + response + "_(" + features + "_" + time + ")_" + model + ".svg";
+            link.download = "parity_plot_" + response + "_(" + feature + "_" + time + ")_" + model + ".svg";
             link.href = url;
 
             // Simulate a click on the link element to trigger the download
@@ -81,13 +77,13 @@ const render = () => {
 
     select("#time-menu")
         .call(dropDownMenu, {
-            options: ["0", "8", "15"],
+            options: times,
             onOptionClicked: onTimeClicked
         });
 
     select("#feature-menu")
         .call(dropDownMenu, {
-            options: ["naive", "topo", "spatial"],
+            options: features,
             onOptionClicked: onFeatureClicked
         });
     // Checkbox
@@ -109,42 +105,41 @@ const render = () => {
             }
         });
 
-    const combinedData = (trueData, predData) => {
-        let combinedData = [];
-        for (let i = 0; i < trueData.length; i++) {
-            combinedData.push({
-                "y_true": trueData[i][response],
-                "y_pred": predData[i][model],
-                "set": predData[i]["set"],
-                "feature": features,
-            });
-        }
-        return combinedData;
+    const filterData = (dataset) => {
+        const filteredDataset = dataset.filter((row, index) => {
+            let modelMatch = row["model"] === model;
+            let responseMatch = row["response"] === response;
+            let featureMatch = row["feature"] === feature;
+            let timeMatch = parseInt(row["timepoint"]) === parseInt(time);
+
+            let contextMatch;
+            if (showCHData && showCData) {
+                contextMatch = row["context"] === "C" || row["context"] === "CH";
+            } else if (showCHData) {
+                contextMatch = row["context"] === "CH";
+            } else if (showCData) {
+                contextMatch = row["context"] === "C";
+            }
+            return modelMatch && responseMatch && featureMatch && contextMatch && timeMatch;
+        });
+        return filteredDataset;
+
     };
 
-    // Combine true and predicted data and plot
-    let dataC = null;
-    let dataCH = null;
-    if (showCData) {
-        dataC = combinedData(trueDataC, predDataC);
-    };
-    if (showCHData) {
-        dataCH = combinedData(trueDataCH, predDataCH);
-    };
+    let filteredData = filterData(rawData);
 
     // Plot
     const margin = { top: 60, right: 40, bottom: 88, left: 150 }
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
     svg.call(parityPlot, {
-        xValue: d => d["y_pred"],
-        yValue: d => d["y_true"],
-        circleRadius: 12,
+        xValue: d => d["y_true"],
+        yValue: d => d["y_pred"],
+        circleRadius: 13,
         margin: { top: 60, right: 40, bottom: 88, left: 150 },
         innerWidth: innerWidth,
         innerHeight: innerHeight,
-        dataC: dataC,
-        dataCH: dataCH
+        data: filteredData,
     });
 
     svg.append("rect")
@@ -159,93 +154,30 @@ const render = () => {
 
 };
 
-if (showCData) {
-    const trueDataPromise = loadParityTrueData(trueDataPathC, responses).then(newData => {
-        trueDataC = newData;
-    });
-    const predDataPromise = loadParityPredData(predDataPathC, models).then(newData => {
-        predDataC = newData;
-    });
-
-    Promise.all([trueDataPromise, predDataPromise]).then(() => {
-        render();
-    });
-};
-
-if (showCHData) {
-    const trueDataPromise = loadParityTrueData(trueDataPathCH, responses).then(newData => {
-        trueDataCH = newData;
-    });
-    const predDataPromise = loadParityPredData(predDataPathCH, models).then(newData => {
-        predDataCH = newData;
-    });
-
-    Promise.all([trueDataPromise, predDataPromise]).then(() => {
-        render();
-    });
-};
+// Load data
+const dataPromise = loadParityData(dataPath).then(newData => {
+    rawData = newData;
+});
+Promise.all([dataPromise]).then(() => { render(); });
 
 
 
 const onResponseClicked = resp => {
     response = resp;
-    // Load predicted data
-    predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/combined.csv";
-    predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/combined.csv";
-
-    if (showCData) {
-        loadParityPredData(predDataPathC, models).then(newData => {
-            predDataC = newData;
-        });
-    }
-    if (showCHData) {
-        loadParityPredData(predDataPathCH, models).then(newData => {
-            predDataCH = newData;
-        });
-    }
     render();
 };
 
 const onModelClicked = mod => {
     model = mod;
-    // Load predicted data
     render();
 };
 
 const onTimeClicked = t => {
     time = t;
-    // Load predicted data
-    predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/combined.csv";
-    predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/combined.csv";
-
-    if (showCData) {
-        loadParityPredData(predDataPathC, models).then(newData => {
-            predDataC = newData;
-        });
-    }
-    if (showCHData) {
-        loadParityPredData(predDataPathCH, models).then(newData => {
-            predDataCH = newData;
-        });
-    }
     render();
 };
 
 const onFeatureClicked = feat => {
-    features = feat;
-    // Load predicted data
-    predDataPathC = "data/predicted/" + features + "_" + time + "_metric_15_C/COUPLED-C-" + response + "/combined.csv";
-    predDataPathCH = "data/predicted/" + features + "_" + time + "_metric_15_CH/COUPLED-CHX-" + response + "/combined.csv";
-
-    if (showCData) {
-        loadParityPredData(predDataPathC, models).then(newData => {
-            predDataC = newData;
-        });
-    }
-    if (showCHData) {
-        loadParityPredData(predDataPathCH, models).then(newData => {
-            predDataCH = newData;
-        });
-    }
+    feature = feat;
     render();
 };

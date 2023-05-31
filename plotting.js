@@ -15,24 +15,8 @@ export const parityPlot = (selection, props) => {
         margin,
         innerWidth,
         innerHeight,
-        dataC,
-        dataCH
+        data
     } = props;
-
-    const dataCValues = dataC ? dataC.map(d => [xValue(d), yValue(d)]) : [];
-    const dataCHValues = dataCH ? dataCH.map(d => [xValue(d), yValue(d)]) : [];
-    const allValues = dataCValues.concat(dataCHValues).flat();
-    const extentAll = extent(allValues);
-
-    const xScale = scaleLinear()
-        .domain(extentAll)
-        .range([0, innerWidth])
-        .nice();
-
-    const yScale = scaleLinear()
-        .domain(extentAll)
-        .range([innerHeight, 0])
-        .nice();
 
     const g = selection.selectAll('.container').data([null]);
     const gEnter = g
@@ -41,13 +25,55 @@ export const parityPlot = (selection, props) => {
     gEnter.merge(g)
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
+    // get largest extend from both x and y values
+    const extentX = d3.extent(data, xValue);
+    const extentY = d3.extent(data, yValue);
+    const extentXY = [Math.min(extentX[0], extentY[0], -1), Math.max(extentX[1], extentY[1])];
+
+    const xScale = scaleLinear()
+        .domain(extentXY)
+        .range([0, innerWidth]);
+
+    const yScale = scaleLinear()
+        .domain(extentXY)
+        .range([innerHeight, 0]);
+
+    // Parity line
+    gEnter.append('line')
+        .attr('class', 'parity-line')
+        .attr('stroke', 'gray')
+        .attr('stroke-dasharray', '5 5')
+        .attr('stroke-width', 5)
+        .attr('x1', xScale.range()[0])
+        .attr('y1', yScale.range()[0])
+        .attr('x2', xScale.range()[1])
+        .attr('y2', yScale.range()[1]);
+
+
+    var circles = g.merge(gEnter)
+        .selectAll('.dot')
+        .data(data, d => d.id);
+
+    circles.exit().remove();
+
+    circles.enter().append('circle')
+        .attr('class', 'dot')
+        .merge(circles)
+        .attr('cy', d => yScale(yValue(d)))
+        .attr('cx', d => xScale(xValue(d)))
+        .attr('r', circleRadius)
+        .attr("fill", d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+        .attr("opacity", 0.4);
+
     const xAxis = axisBottom(xScale)
-        .tickValues([-1, 0, 1])
+        .ticks(0)
+        .tickFormat(d3.format(".1f"))
         .tickSize(0)
         .tickPadding(15);
 
     const yAxis = axisLeft(yScale)
-        .tickValues([-1, 0, 1])
+        .ticks(0)
+        .tickFormat(d3.format(".1f"))
         .tickSize(0)
         .tickPadding(10);
 
@@ -58,7 +84,8 @@ export const parityPlot = (selection, props) => {
 
     yAxisG
         .merge(yAxisGEnter)
-        .call(yAxis);
+        .call(yAxis)
+        .attr("font-size", "50px");
 
     const xAxisG = g.select('.x-axis');
     const xAxisGEnter = gEnter
@@ -67,60 +94,8 @@ export const parityPlot = (selection, props) => {
     xAxisG
         .merge(xAxisGEnter)
         .attr('transform', `translate(0,${innerHeight})`)
-        .call(xAxis);
-
-
-    var circlesC = g.merge(gEnter)
-        .selectAll('.circle-c')
-        .data(dataC || [], d => d.id);
-
-    circlesC.exit().remove();
-
-    if (dataC != null) {
-        circlesC = g.merge(gEnter)
-            .selectAll('.circle-c')
-            .data(dataC);
-
-        circlesC.enter().append('circle')
-            .attr('class', 'circle-c')
-            .merge(circlesC)
-            .attr('cy', d => yScale(yValue(d)))
-            .attr('cx', d => xScale(xValue(d)))
-            .attr('r', circleRadius)
-            .attr("fill", d => getColor("C-" + d.feature + "-" + d.set.toUpperCase()))
-            .attr("opacity", 0.4);
-    };
-
-    var circlesCH = g.merge(gEnter)
-        .selectAll('.circle-ch')
-        .data(dataCH || [], d => d.id);
-
-    circlesCH.exit().remove();
-
-    if (dataCH != null) {
-        circlesCH = g.merge(gEnter)
-            .selectAll('.circle-ch')
-            .data(dataCH);
-
-        circlesCH.enter().append('circle')
-            .attr('class', 'circle-ch')
-            .merge(circlesCH)
-            .attr('cy', d => yScale(yValue(d)))
-            .attr('cx', d => xScale(xValue(d)))
-            .attr('r', circleRadius)
-            .attr("fill", d => getColor("CH-" + d.feature + "-" + d.set.toUpperCase()))
-            .attr("opacity", 0.4);
-    }
-
-    gEnter.append('line')
-        .attr('class', 'parity-line')
-        .attr('stroke', 'gray')
-        .attr('stroke-dasharray', '5 5')
-        .attr('stroke-width', 4)
-        .attr('x1', xScale.range()[0])
-        .attr('y1', yScale.range()[0])
-        .attr('x2', xScale.range()[1])
-        .attr('y2', yScale.range()[1]);
+        .call(xAxis)
+        .attr("font-size", "50px");
 
 };
 
@@ -291,15 +266,32 @@ export const linePlot = (selection, props) => {
 
     const sortedData = data.sort((a, b) => xValue(a) - xValue(b));
 
+    const g = selection.selectAll('.container').data([null]);
+    const gEnter = g.enter().append('g')
+        .attr('class', 'container');
+    gEnter.merge(g)
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
     const xScale = d3.scaleLinear()
         .domain(d3.extent(sortedData, xValue))
         .range([0, innerWidth])
         .nice();
 
-    const yScale = d3.scaleLinear()
-        .domain(d3.extent(sortedData, yValue))
-        .range([innerHeight, 0])
-        .nice();
+    const minValue = d3.min(sortedData, yValue);
+    const maxValue = d3.max(sortedData, yValue);
+    const breakPoint = -2;
+    let yScale;
+
+    if (minValue < breakPoint) {
+        yScale = d3.scaleLinear()
+            .domain([minValue, breakPoint, (maxValue / 2), maxValue])
+            .range([innerHeight, innerHeight / 2 + 30, innerHeight / 2 - 20, 0]);
+    } else {
+        yScale = d3.scaleLinear()
+            .domain([minValue, d3.max(sortedData, yValue)])
+            .range([innerHeight, 0])
+            .nice();
+    }
 
     const lineGenerator = d3.line()
         .x(d => xScale(xValue(d)))
@@ -329,13 +321,6 @@ export const linePlot = (selection, props) => {
         )
     );
 
-    const g = selection.selectAll('.container').data([null]);
-
-    const gEnter = g.enter().append('g')
-        .attr('class', 'container');
-    gEnter.merge(g)
-        .attr('transform', `translate(${margin.left},${margin.top})`);
-
     const lines = g.merge(gEnter)
         .selectAll('.line')
         .data(linesData, d => d.key);
@@ -364,12 +349,14 @@ export const linePlot = (selection, props) => {
         .attr('stroke-width', 3);
 
     const xAxis = axisBottom(xScale)
-        .tickSize(-innerHeight)
-        .tickPadding(15);
+        .ticks(5)
+        .tickSize(0)
+        .tickPadding(10);
 
     const yAxis = axisLeft(yScale)
-        .ticks(5)
-        .tickSize(-innerWidth)
+        .ticks(4)
+        .tickFormat(d3.format(".1f"))
+        .tickSize(0)
         .tickPadding(10);
 
     const yAxisG = g.select('.y-axis');
@@ -381,6 +368,7 @@ export const linePlot = (selection, props) => {
     yAxisG
         .merge(yAxisGEnter)
         .call(yAxis)
+        .attr("font-size", "50px")
         .selectAll('.domain, .tick line')
         .remove();
 
@@ -393,8 +381,47 @@ export const linePlot = (selection, props) => {
         .merge(xAxisGEnter)
         .attr('transform', `translate(0,${innerHeight})`)
         .call(xAxis)
+        .attr("font-size", "50px")
         .selectAll('.domain, .tick line')
         .remove();
+
+
+    // make a black box around the svg
+    const outline = g.merge(gEnter)
+        .selectAll('.break-rect')
+        .data([null]);
+
+    outline.exit().remove();
+
+    outline.enter().append("rect")
+        .attr('class', 'black-box')
+        .merge(outline)
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", innerWidth)
+        .attr("height", innerHeight)
+        // .attr("transform", `translate(${margin.left},${margin.top})`)
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", "1px");
+
+    if (minValue < breakPoint) {
+        // Add a break rectanlge to signify where the break in the y axis is
+        const breakRect = g.merge(gEnter)
+            .selectAll('.break-rect')
+            .data([null, null]);
+
+        breakRect.exit().remove();
+
+        breakRect.enter().append('rect')
+            .attr('class', 'break-rect')
+            .merge(breakRect)
+            .attr('x', -10)
+            .attr('width', 20)
+            .attr('height', (d, i) => i === 0 ? 10 : 6)
+            .attr('fill', (d, i) => i === 1 ? 'white' : 'black')
+            .attr('y', (d, i) => i === 0 ? innerHeight / 2 : innerHeight / 2 + 2);
+    }
 
 };
 
