@@ -23,6 +23,8 @@ let response = "ACTIVITY";
 let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 let model = "MLR";
 let models = ["MLR", "RF", "SVR", "MLP"];
+let time = "0";
+let times = ["0", "8", "15"];
 
 let dataPath = "data/predicted/transformed_quant_se.csv"
 
@@ -73,6 +75,12 @@ const render = () => {
             onOptionClicked: onModelClicked
         });
 
+    select("#time-menu")
+        .call(dropDownMenu, {
+            options: times,
+            onOptionClicked: onTimeClicked
+        });
+
     select("#feature-menu")
         .call(dropDownMenu, {
             options: features,
@@ -102,6 +110,7 @@ const render = () => {
             let modelMatch = row["model"] === model;
             let responseMatch = row["response"] === response;
             let featureMatch = row["feature"] === feature;
+            let timeMatch = parseInt(row["timepoint"]) === parseInt(time);
 
             let contextMatch;
             if (showCHData && showCData) {
@@ -111,7 +120,7 @@ const render = () => {
             } else if (showCData) {
                 contextMatch = row["context"] === "C";
             }
-            return modelMatch && responseMatch && contextMatch && featureMatch;
+            return modelMatch && responseMatch && contextMatch && featureMatch && timeMatch;
         });
 
         return filteredDataset;
@@ -144,6 +153,11 @@ Promise.all([dataPromise]).then(() => { render(); });
 
 const onResponseClicked = resp => {
     response = resp;
+    render();
+};
+
+const onTimeClicked = t => {
+    time = t;
     render();
 };
 

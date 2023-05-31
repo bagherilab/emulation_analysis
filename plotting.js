@@ -50,19 +50,33 @@ export const parityPlot = (selection, props) => {
         .attr('y2', yScale.range()[1]);
 
 
-    var circles = g.merge(gEnter)
+    var markers = g.merge(gEnter)
         .selectAll('.dot')
         .data(data, d => d.id);
 
-    circles.exit().remove();
+    markers.exit().remove();
 
-    circles.enter().append('circle')
-        .attr('class', 'dot')
-        .merge(circles)
-        .attr('cy', d => yScale(yValue(d)))
-        .attr('cx', d => xScale(xValue(d)))
-        .attr('r', circleRadius)
-        .attr("fill", d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+    markers.enter().append('g')
+        .attr('class', d => d.context === "C" ? 'dot-c' : 'dot-ch') // Add class conditionally
+        .merge(markers)
+        .attr('transform', d => `translate(${xScale(xValue(d))},${yScale(yValue(d))})`)
+        .each(function (d) {
+            if (d.context === "C") {
+                d3.select(this).append('circle')
+                    .attr('class', 'circle')
+                    .attr('r', circleRadius)
+                    .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()));
+            } else {
+                d3.select(this).append('rect')
+                    .attr('class', 'square')
+                    .attr('x', -circleRadius)
+                    .attr('y', -circleRadius)
+                    .attr('width', circleRadius * 2)
+                    .attr('height', circleRadius * 2)
+                    .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()));
+            }
+        })
+
         .attr("opacity", 0.4);
 
     const xAxis = axisBottom(xScale)
@@ -119,7 +133,7 @@ export const barPlot = (selection, props) => {
 
     const yScale = d3
         .scaleLinear()
-        .domain([d3.min(data, d => d['R^2']), d3.max(data, d => d['R^2'])])
+        .domain([-0.1, 0.6])
         .range([innerHeight, 0])
         .nice();
 
@@ -237,7 +251,7 @@ export const barPlot = (selection, props) => {
         });
 
     const yAxis = d3.axisLeft(yScale)
-        .ticks(5)
+        .ticks(0)
         .tickSize(-innerWidth)
         .tickPadding(10);
 
@@ -245,7 +259,8 @@ export const barPlot = (selection, props) => {
     const yAxisGEnter = gEnter
         .append('g')
         .attr("class", "y-axis")
-        .call(d3.axisLeft(yScale));
+        .call(d3.axisLeft(yScale))
+        .attr("font-size", "50px");
 
     yAxisG
         .merge(yAxisGEnter)
@@ -279,16 +294,20 @@ export const linePlot = (selection, props) => {
 
     const minValue = d3.min(sortedData, yValue);
     const maxValue = d3.max(sortedData, yValue);
-    const breakPoint = -2;
+    const breakPoint = -1;
     let yScale;
 
     if (minValue < breakPoint) {
         yScale = d3.scaleLinear()
-            .domain([minValue, breakPoint, (maxValue / 2), maxValue])
-            .range([innerHeight, innerHeight / 2 + 30, innerHeight / 2 - 20, 0]);
+            .domain([minValue, breakPoint, -0.1, maxValue])
+            .range([innerHeight, innerHeight / 1.3 + 1, innerHeight / 1.3 - 1, 0]);
     } else {
+        // yScale = d3.scaleLinear()
+        // .domain([minValue, d3.max(sortedData, yValue)])
+        // .range([innerHeight, 0])
+        // .nice();
         yScale = d3.scaleLinear()
-            .domain([minValue, d3.max(sortedData, yValue)])
+            .domain([-0.3, 1.0])
             .range([innerHeight, 0])
             .nice();
     }
@@ -337,7 +356,7 @@ export const linePlot = (selection, props) => {
         .attr('class', 'interval')
         .merge(intervals)
         .attr('d', d => intervalGenerator(d.values))
-        .attr('fill', d => `${getColor(d.key)}80`)
+        .attr('fill', d => getIntervalColor(d.key, 0.7))
         .attr('stroke', 'none');
 
     lines.enter().append('path')
@@ -346,15 +365,20 @@ export const linePlot = (selection, props) => {
         .attr('d', d => lineGenerator(d.values))
         .attr('fill', 'none')
         .attr('stroke', d => getColor(d.key))
-        .attr('stroke-width', 3);
+        .attr('stroke-width', 3)
+        .attr('stroke-dasharray', d => d.key.startsWith("CH") ? '5 5' : 'none');
 
     const xAxis = axisBottom(xScale)
-        .ticks(5)
+        // .tickValues([0, 2, 4, 6, 8, 10, 12, 14])
+        .tickValues([100, 200, 300, 400, 500])
+        .tickFormat(d3.format(".0f"))
+        // .ticks(0)
         .tickSize(0)
         .tickPadding(10);
 
     const yAxis = axisLeft(yScale)
-        .ticks(4)
+        .tickValues([-10.0, 0.0, 0.2, 0.4, 0.6, 0.8])
+        // .ticks(5)
         .tickFormat(d3.format(".1f"))
         .tickSize(0)
         .tickPadding(10);
@@ -400,7 +424,6 @@ export const linePlot = (selection, props) => {
         .attr("y", 0)
         .attr("width", innerWidth)
         .attr("height", innerHeight)
-        // .attr("transform", `translate(${margin.left},${margin.top})`)
         .style("fill", "none")
         .style("stroke", "black")
         .style("stroke-width", "1px");
@@ -418,9 +441,9 @@ export const linePlot = (selection, props) => {
             .merge(breakRect)
             .attr('x', -10)
             .attr('width', 20)
-            .attr('height', (d, i) => i === 0 ? 10 : 6)
+            .attr('height', (d, i) => i === 0 ? 12 : 6)
             .attr('fill', (d, i) => i === 1 ? 'white' : 'black')
-            .attr('y', (d, i) => i === 0 ? innerHeight / 2 : innerHeight / 2 + 2);
+            .attr('y', (d, i) => i === 0 ? innerHeight / 1.2 : innerHeight / 1.2 + 3);
     }
 
 };
@@ -442,4 +465,37 @@ const getColor = key => {
         "CH-spatial-TRAIN": "#333333", // dark gray
     };
     return colorMap[key] || 'purple';
+};
+
+const getIntervalColor = (key, opacity) => {
+    const colorMap = {
+        "C-topo-TEST": lightenColor(getColor(key), opacity), // light blue with 60% opacity
+        "CH-topo-TEST": lightenColor(getColor(key), opacity), // dark blue with 60% opacity
+        "C-spatial-TEST": lightenColor(getColor(key), opacity), // light orange with 60% opacity
+        "CH-spatial-TEST": lightenColor(getColor(key), opacity), // dark orange with 60% opacity
+        "C-topo-TRAIN": lightenColor(getColor(key), opacity), // light gray with 60% opacity
+        "CH-topo-TRAIN": lightenColor(getColor(key), opacity), // dark gray with 60% opacity
+        "C-spatial-TRAIN": lightenColor(getColor(key), opacity), // light gray with 60% opacity
+        "CH-spatial-TRAIN": lightenColor(getColor(key), opacity), // dark gray with 60% opacity
+    };
+
+    return colorMap[key] || "#000000"; // Return black if key is not found
+};
+
+const lightenColor = (color, opacity) => {
+    // Parse the color into its RGB components
+    const hex = color.slice(1);
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    // Calculate the lighter RGB values with the desired opacity
+    const newR = Math.round((255 - r) * opacity + r);
+    const newG = Math.round((255 - g) * opacity + g);
+    const newB = Math.round((255 - b) * opacity + b);
+
+    // Convert the new RGB values back to a hex color string
+    const newColor = `#${newR.toString(16).padStart(2, "0")}${newG.toString(16).padStart(2, "0")}${newB.toString(16).padStart(2, "0")}`;
+
+    return newColor;
 };

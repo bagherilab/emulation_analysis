@@ -123,7 +123,7 @@ const render = () => {
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
     svg.call(linePlot, {
-        xValue: d => d["timepoint"],
+        xValue: d => d["timepoint"] - 1,
         yValue: d => d["R^2"],
         margin: margin,
         innerWidth: innerWidth,
