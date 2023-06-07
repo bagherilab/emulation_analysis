@@ -403,10 +403,17 @@ export const linePlot = (selection, props) => {
     gEnter.merge(g)
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const xScale = d3.scaleLinear()
-        .domain(d3.extent(sortedData, xValue))
-        .range([0, innerWidth])
-        .nice();
+    let xScale;
+    if (type === "temporal") {
+        xScale = d3.scaleLinear()
+            .domain([-1, 14])
+            .range([0, innerWidth]);
+    } else {
+        xScale = d3.scaleLinear()
+            .domain([50, 500])
+            .range([0, innerWidth]);
+    }
+
 
     const minValue = d3.min(sortedData, yValue);
     const maxValue = d3.max(sortedData, yValue);
@@ -420,8 +427,7 @@ export const linePlot = (selection, props) => {
     } else {
         yScale = d3.scaleLinear()
             .domain([-0.3, 1.1])
-            .range([innerHeight, 0])
-            .nice();
+            .range([innerHeight, 0]);
     }
 
     const zeroLine = g.merge(gEnter)
@@ -471,15 +477,18 @@ export const linePlot = (selection, props) => {
 
 
     lines.exit().remove();
-    intervals.exit().remove();
 
-    intervals.enter().append('path')
-        .attr('class', 'interval')
-        .merge(intervals)
-        .attr('d', d => intervalGenerator(d.values))
-        .attr('fill', d => getIntervalColor(d.key, 0.7))
-        .attr('stroke', 'none');
 
+    // intervals.exit().remove();
+
+    // intervals.enter().append('path')
+    //     .attr('class', 'interval')
+    //     .merge(intervals)
+    //     .attr('d', d => intervalGenerator(d.values))
+    //     .attr('fill', d => getIntervalColor(d.key, 0.7))
+    //     .attr('stroke', 'none');
+
+    console.log(data)
     lines.enter().append('path')
         .attr('class', 'line')
         .merge(lines)
@@ -487,7 +496,7 @@ export const linePlot = (selection, props) => {
         .attr('fill', 'none')
         .attr('stroke', d => getColor(d.key))
         .attr('stroke-width', 8)
-        .attr('stroke-dasharray', d => d.key.startsWith("CH") ? '5 5' : 'none');
+        .attr('stroke-dasharray', d => d.set === "TRAIN" ? '5 5' : 'none');
 
 
     let xAxis;
@@ -515,8 +524,8 @@ export const linePlot = (selection, props) => {
     let yAxis;
     let minYTick = minValue;
     if (minValue < breakPoint) {
-        if (minYTick / 2 > -1) {
-            minYTick = -2.5;
+        if (minYTick / 2 > -3) {
+            minYTick = -4;
         }
 
         if (showYAxis) {
@@ -572,26 +581,6 @@ export const linePlot = (selection, props) => {
         .attr('transform', `translate(0,${innerHeight})`)
         .call(xAxis)
         .attr("font-size", "50px");
-    // .selectAll('.domain, .tick line')
-    // .remove();
-
-    // make a black box around the svg
-    // const outline = g.merge(gEnter)
-    //     .selectAll('.break-rect')
-    //     .data([null]);
-
-    // outline.exit().remove();
-
-    // outline.enter().append("rect")
-    //     .attr('class', 'black-box')
-    //     .merge(outline)
-    //     .attr("x", 0)
-    //     .attr("y", 0)
-    //     .attr("width", innerWidth)
-    //     .attr("height", innerHeight)
-    //     .style("fill", "none")
-    //     .style("stroke", "black")
-    //     .style("stroke-width", "1px");
 
     if (minValue < breakPoint) {
         // Add a break rectanlge to signify where the break in the y axis is
@@ -605,9 +594,9 @@ export const linePlot = (selection, props) => {
             .attr('class', 'break-rect')
             .merge(breakRect)
             .attr('x', -20)
-            .attr('width', 40)
+            .attr('width', (d, i) => i === 0 ? 40 : innerWidth)
             .attr('height', (d, i) => i === 0 ? 20 : 10)
-            .attr('fill', (d, i) => i === 1 ? 'white' : 'black')
+            .attr('fill', (d, i) => i === 0 ? 'black' : 'white')
             .attr('y', (d, i) => i === 0 ? innerHeight / 1.3 : innerHeight / 1.3 + 5);
     }
 
@@ -615,19 +604,34 @@ export const linePlot = (selection, props) => {
 
 const getColor = key => {
     const colorMap = {
-        "C-naive-TEST": "#53d83a", // light green
+        "C-naive-TEST": "#006600",
         "CH-naive-TEST": "#006600", // dark green
-        "C-topo-TEST": "#4cb6da", // light blue
+        "C-topo-TEST": "#004c6d", // 
         "CH-topo-TEST": "#004c6d", // dark blue
-        "C-spatial-TEST": "#FF7F00", // light orange
+        "C-spatial-TEST": "#FF2400", // 
         "CH-spatial-TEST": "#FF2400", // dark orange
 
-        "C-naive-TRAIN": "#CCCCCC", // light gray
-        "CH-naive-TRAIN": "#666666", // dark gray
-        "C-topo-TRAIN": "#999999", // light gray
-        "CH-topo-TRAIN": "#666666", // dark gray
-        "C-spatial-TRAIN": "#666666", // light gray
-        "CH-spatial-TRAIN": "#666666", // dark gray
+        "C-naive-TRAIN": "#53d83a", // light green
+        "CH-naive-TRAIN": "#53d83a",
+        "C-topo-TRAIN": "#4cb6da", // light blue
+        "CH-topo-TRAIN": "#4cb6da", // 
+        "C-spatial-TRAIN": "#FF7F00", // light orange
+        "CH-spatial-TRAIN": "#FF7F00", // 
+
+
+        // "C-naive-TEST": "#53d83a", // light green
+        // "CH-naive-TEST": "#006600", // dark green
+        // "C-topo-TEST": "#4cb6da", // light blue
+        // "CH-topo-TEST": "#004c6d", // dark blue
+        // "C-spatial-TEST": "#FF7F00", // light orange
+        // "CH-spatial-TEST": "#FF2400", // dark orange
+
+        // "C-naive-TRAIN": "#CCCCCC", // light gray
+        // "CH-naive-TRAIN": "#666666", // dark gray
+        // "C-topo-TRAIN": "#999999", // light gray
+        // "CH-topo-TRAIN": "#666666", // dark gray
+        // "C-spatial-TRAIN": "#666666", // light gray
+        // "CH-spatial-TRAIN": "#666666", // dark gray
 
         // "C-naive-TEST": "#004c6d", // dark blue
         // "C-topo-TEST": "#004c6d", // 

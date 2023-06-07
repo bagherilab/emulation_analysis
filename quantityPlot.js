@@ -12,14 +12,17 @@ const svg = select('svg');
 const width = +svg.attr('width');
 const height = +svg.attr('height');
 
-let showCData = true;
-let showCHData = true;
+let showTData = false;
+let showHEData = true;
+let showSData = true;
 
 let showXAxis = true;
 let showYAxis = true;
 
 let rawData;
 
+let context = "C";
+let contexts = ["C", "CH"];
 let feature = "topo";
 let features = ["topo", "spatial"]
 let response = "ACTIVITY";
@@ -29,7 +32,7 @@ let models = ["MLR", "RF", "SVR", "MLP"];
 let time = "0";
 let times = ["0", "8", "15"];
 
-let dataPath = "data/predicted/transformed_quant_se.csv"
+let dataPath = "data/predicted/transformed_quant.csv"
 
 const saveButtonId = 'saveButton';
 
@@ -84,30 +87,38 @@ const render = () => {
             onOptionClicked: onTimeClicked
         });
 
-    select("#feature-menu")
+    select("#context-menu")
         .call(dropDownMenu, {
-            options: features,
-            onOptionClicked: onFeatureClicked
+            options: contexts,
+            onOptionClicked: onContextClicked
         });
     // Checkbox
-    select("#c-checkbox")
+    select("#T-checkbox")
         .call(checkBox, {
-            checked: true,
+            checked: false,
             onCheckClicked: check => {
-                showCData = check;
+                showTData = check;
                 render();
             }
         });
 
-    select("#ch-checkbox")
+    select("#HE-checkbox")
         .call(checkBox, {
             checked: true,
             onCheckClicked: check => {
-                showCHData = check;
+                showHEData = check;
                 render();
             }
         });
 
+    select("#S-checkbox")
+        .call(checkBox, {
+            checked: true,
+            onCheckClicked: check => {
+                showSData = check;
+                render();
+            }
+        });
     select("#x-check")
         .call(checkBox, {
             checked: true,
@@ -129,16 +140,24 @@ const render = () => {
         const filteredDataset = dataset.filter((row, index) => {
             let modelMatch = row["model"] === model;
             let responseMatch = row["response"] === response;
-            let featureMatch = row["feature"] === feature;
+            let contextMatch = row["context"] === context;
             let timeMatch = parseInt(row["timepoint"]) === parseInt(time);
 
-            let contextMatch;
-            if (showCHData && showCData) {
-                contextMatch = row["context"] === "C" || row["context"] === "CH";
-            } else if (showCHData) {
-                contextMatch = row["context"] === "CH";
-            } else if (showCData) {
-                contextMatch = row["context"] === "C";
+            let featureMatch;
+            if (showTData && showHEData && showSData) {
+                featureMatch = row["feature"] === "naive" || row["feature"] === "topo" || row["feature"] === "spatial";
+            } else if (showTData && showHEData) {
+                featureMatch = row["feature"] === "naive" || row["feature"] === "topo";
+            } else if (showTData && showSData) {
+                featureMatch = row["feature"] === "naive" || row["feature"] === "spatial";
+            } else if (showHEData && showSData) {
+                featureMatch = row["feature"] === "topo" || row["feature"] === "spatial";
+            } else if (showTData) {
+                featureMatch = row["feature"] === "naive";
+            } else if (showHEData) {
+                featureMatch = row["feature"] === "topo";
+            } else if (showSData) {
+                featureMatch = row["feature"] === "spatial";
             }
             return modelMatch && responseMatch && contextMatch && featureMatch && timeMatch;
         });
@@ -189,7 +208,7 @@ const onModelClicked = mod => {
     render();
 };
 
-const onFeatureClicked = feat => {
-    feature = feat;
+const onContextClicked = cont => {
+    context = cont;
     render();
 };

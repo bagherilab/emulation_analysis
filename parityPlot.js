@@ -174,7 +174,7 @@ const render = () => {
     svg.call(parityPlot, {
         xValue: d => d["y_pred"],
         yValue: d => d["y_true"],
-        circleRadius: 6,
+        circleRadius: 7,
         margin: { top: 60, right: 40, bottom: 88, left: 150 },
         innerWidth: innerWidth,
         innerHeight: innerHeight,

@@ -26,7 +26,7 @@ let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 let model = "MLR";
 let models = ["MLR", "RF", "SVR", "MLP"];
 
-let dataPath = "data/predicted/transformed_temporal_se.csv"
+let dataPath = "data/predicted/transformed_temporal.csv"
 
 const saveButtonId = 'saveButton';
 
