@@ -417,18 +417,10 @@ export const linePlot = (selection, props) => {
 
     const minValue = d3.min(sortedData, yValue);
     const maxValue = d3.max(sortedData, yValue);
-    const breakPoint = -1;
     let yScale;
-
-    if (minValue < breakPoint) {
-        yScale = d3.scaleLinear()
-            .domain([minValue, breakPoint, -0.1, 1.1])
-            .range([innerHeight, innerHeight / 1.3 + 1, innerHeight / 1.3 - 1, 0]);
-    } else {
-        yScale = d3.scaleLinear()
-            .domain([-0.3, 1.1])
-            .range([innerHeight, 0]);
-    }
+    yScale = d3.scaleLinear()
+        .domain([-0.1, 1.1])
+        .range([innerHeight, 0]);
 
     const zeroLine = g.merge(gEnter)
         .append("line")
@@ -443,11 +435,6 @@ export const linePlot = (selection, props) => {
     const lineGenerator = d3.line()
         .x(d => xScale(xValue(d)))
         .y(d => yScale(yValue(d)));
-
-    const intervalGenerator = d3.area()
-        .x(d => xScale(xValue(d)))
-        .y0(d => yScale(d.se_lower))
-        .y1(d => yScale(d.se_upper));
 
     const nestedData = d3.nest()
         .key(d => d.context)
@@ -467,37 +454,32 @@ export const linePlot = (selection, props) => {
         )
     );
 
+    // Clip path
+    g.merge(gEnter)
+        .append("defs")
+        .append("clipPath")
+        .attr("id", "clip-path")
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", innerWidth)
+        .attr("height", innerHeight);
+
     const lines = g.merge(gEnter)
         .selectAll('.line')
         .data(linesData, d => d.key);
 
-    const intervals = g.merge(gEnter)
-        .selectAll('.interval')
-        .data(linesData, d => d.key);
-
-
     lines.exit().remove();
 
-
-    // intervals.exit().remove();
-
-    // intervals.enter().append('path')
-    //     .attr('class', 'interval')
-    //     .merge(intervals)
-    //     .attr('d', d => intervalGenerator(d.values))
-    //     .attr('fill', d => getIntervalColor(d.key, 0.7))
-    //     .attr('stroke', 'none');
-
-    console.log(data)
     lines.enter().append('path')
         .attr('class', 'line')
         .merge(lines)
         .attr('d', d => lineGenerator(d.values))
         .attr('fill', 'none')
         .attr('stroke', d => getColor(d.key))
-        .attr('stroke-width', 8)
-        .attr('stroke-dasharray', d => d.set === "TRAIN" ? '5 5' : 'none');
-
+        .attr('stroke-width', 9)
+        .attr('stroke-dasharray', d => d.key.endsWith("TRAIN") ? '20 5' : 'none')
+        .attr("clip-path", "url(#clip-path)");
 
     let xAxis;
     if (showXAxis) {
@@ -522,40 +504,20 @@ export const linePlot = (selection, props) => {
     }
 
     let yAxis;
-    let minYTick = minValue;
-    if (minValue < breakPoint) {
-        if (minYTick / 2 > -3) {
-            minYTick = -4;
-        }
-
-        if (showYAxis) {
-            yAxis = axisLeft(yScale)
-                .tickValues([(minYTick / 2), 0.0, 0.5, 1.0])
-                .tickFormat(d3.format(".1f"))
-                .tickSize(3)
-                .tickPadding(10);
-        } else {
-            yAxis = axisLeft(yScale)
-                .ticks(0)
-                .tickFormat(d3.format(".1f"))
-                .tickSize(3)
-                .tickPadding(10);
-        }
+    if (showYAxis) {
+        yAxis = axisLeft(yScale)
+            .tickValues([0.0, 0.5, 1.0])
+            .tickFormat(d3.format(".1f"))
+            .tickSize(3)
+            .tickPadding(10);
     } else {
-        if (showYAxis) {
-            yAxis = axisLeft(yScale)
-                .tickValues([0.0, 0.5, 1.0])
-                .tickFormat(d3.format(".1f"))
-                .tickSize(3)
-                .tickPadding(10);
-        } else {
-            yAxis = axisLeft(yScale)
-                .ticks(0)
-                .tickFormat(d3.format(".1f"))
-                .tickSize(3)
-                .tickPadding(10);
-        }
+        yAxis = axisLeft(yScale)
+            .ticks(0)
+            .tickFormat(d3.format(".1f"))
+            .tickSize(3)
+            .tickPadding(10);
     }
+
 
 
     const yAxisG = g.select('.y-axis');
@@ -568,8 +530,6 @@ export const linePlot = (selection, props) => {
         .merge(yAxisGEnter)
         .call(yAxis)
         .attr("font-size", "50px");
-    // .selectAll('.domain, .tick line')
-    // .remove();
 
     const xAxisG = g.select('.x-axis');
     const xAxisGEnter = gEnter
@@ -581,25 +541,6 @@ export const linePlot = (selection, props) => {
         .attr('transform', `translate(0,${innerHeight})`)
         .call(xAxis)
         .attr("font-size", "50px");
-
-    if (minValue < breakPoint) {
-        // Add a break rectanlge to signify where the break in the y axis is
-        const breakRect = g.merge(gEnter)
-            .selectAll('.break-rect')
-            .data([null, null]);
-
-        breakRect.exit().remove();
-
-        breakRect.enter().append('rect')
-            .attr('class', 'break-rect')
-            .merge(breakRect)
-            .attr('x', -20)
-            .attr('width', (d, i) => i === 0 ? 40 : innerWidth)
-            .attr('height', (d, i) => i === 0 ? 20 : 10)
-            .attr('fill', (d, i) => i === 0 ? 'black' : 'white')
-            .attr('y', (d, i) => i === 0 ? innerHeight / 1.3 : innerHeight / 1.3 + 5);
-    }
-
 };
 
 const getColor = key => {
@@ -617,70 +558,6 @@ const getColor = key => {
         "CH-topo-TRAIN": "#4cb6da", // 
         "C-spatial-TRAIN": "#FF7F00", // light orange
         "CH-spatial-TRAIN": "#FF7F00", // 
-
-
-        // "C-naive-TEST": "#53d83a", // light green
-        // "CH-naive-TEST": "#006600", // dark green
-        // "C-topo-TEST": "#4cb6da", // light blue
-        // "CH-topo-TEST": "#004c6d", // dark blue
-        // "C-spatial-TEST": "#FF7F00", // light orange
-        // "CH-spatial-TEST": "#FF2400", // dark orange
-
-        // "C-naive-TRAIN": "#CCCCCC", // light gray
-        // "CH-naive-TRAIN": "#666666", // dark gray
-        // "C-topo-TRAIN": "#999999", // light gray
-        // "CH-topo-TRAIN": "#666666", // dark gray
-        // "C-spatial-TRAIN": "#666666", // light gray
-        // "CH-spatial-TRAIN": "#666666", // dark gray
-
-        // "C-naive-TEST": "#004c6d", // dark blue
-        // "C-topo-TEST": "#004c6d", // 
-        // "C-spatial-TEST": "#004c6d", // 
-
-        // "CH-naive-TEST": "#333333", // dark gray
-        // "CH-topo-TEST": "#333333", // 
-        // "CH-spatial-TEST": "#333333", // 
-
-        // "C-naive-TRAIN": "#4cb6da", // light blue
-        // "C-topo-TRAIN": "#4cb6da", //
-        // "C-spatial-TRAIN": "#4cb6da", // 
-
-        // "CH-naive-TRAIN": "#BDC4CB", // light gray
-        // "CH-topo-TRAIN": "#BDC4CB", //
-        // "CH-spatial-TRAIN": "#BDC4CB", //
     };
     return colorMap[key] || 'purple';
-};
-
-const getIntervalColor = (key, opacity) => {
-    const colorMap = {
-        "C-topo-TEST": lightenColor(getColor(key), opacity), // light blue with 60% opacity
-        "CH-topo-TEST": lightenColor(getColor(key), opacity), // dark blue with 60% opacity
-        "C-spatial-TEST": lightenColor(getColor(key), opacity), // light orange with 60% opacity
-        "CH-spatial-TEST": lightenColor(getColor(key), opacity), // dark orange with 60% opacity
-        "C-topo-TRAIN": lightenColor(getColor(key), opacity), // light gray with 60% opacity
-        "CH-topo-TRAIN": lightenColor(getColor(key), opacity), // dark gray with 60% opacity
-        "C-spatial-TRAIN": lightenColor(getColor(key), opacity), // light gray with 60% opacity
-        "CH-spatial-TRAIN": lightenColor(getColor(key), opacity), // dark gray with 60% opacity
-    };
-
-    return colorMap[key] || "#000000"; // Return black if key is not found
-};
-
-const lightenColor = (color, opacity) => {
-    // Parse the color into its RGB components
-    const hex = color.slice(1);
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-
-    // Calculate the lighter RGB values with the desired opacity
-    const newR = Math.round((255 - r) * opacity + r);
-    const newG = Math.round((255 - g) * opacity + g);
-    const newB = Math.round((255 - b) * opacity + b);
-
-    // Convert the new RGB values back to a hex color string
-    const newColor = `#${newR.toString(16).padStart(2, "0")}${newG.toString(16).padStart(2, "0")}${newB.toString(16).padStart(2, "0")}`;
-
-    return newColor;
 };
