@@ -131,6 +131,9 @@ def combine_temporal_r_squares():
                 )
 
 
+pred_data_path = "data/predicted/stored_results"
+
+
 def combine_bar_plots_r_sqaures():
     combined_df = pd.DataFrame()
     experiment_folders = os.listdir(pred_data_path)
@@ -143,12 +146,10 @@ def combine_bar_plots_r_sqaures():
         ):
             continue
 
-        if "naive" in experiment_folder:
-            continue
-
         if not re.match(r".*?0.*?15.*", experiment_folder):
             continue
 
+        print(experiment_folder)
         feature = experiment_folder.split("_")[0]
 
         for response in responses:
@@ -194,10 +195,10 @@ def combine_bar_plots_r_sqaures():
 
                     combined_df = pd.concat([combined_df, test_df, train_df])
 
-                combined_df.to_csv(
-                    os.path.join(pred_data_path, "topo_spatial_r2.csv"),
-                    index=False,
-                )
+    combined_df.to_csv(
+        os.path.join(pred_data_path, "bar_r2.csv"),
+        index=False,
+    )
 
 
 quantity_data_path = "data/predicted/quantity_experiments"
@@ -421,7 +422,8 @@ def format_parity():
 
 
 if __name__ == "__main__":
-    explode_ci()
+    combine_bar_plots_r_sqaures()
+    # explode_ci()
     # format_floats()
     # remove_50_obs()
     # parity_plot_data()

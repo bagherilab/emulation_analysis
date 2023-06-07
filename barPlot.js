@@ -12,13 +12,15 @@ const svg = select('svg');
 const width = +svg.attr('width');
 const height = +svg.attr('height');
 
+let showYAxis = true;
+
 let rawData;
 
 let model = "MLR";
 let models = ["MLR", "RF", "SVR", "MLP"];
 let context = "C";
 
-let dataPath = "data/predicted/topo_spatial_r2.csv"
+let dataPath = "data/predicted/bar_r2.csv"
 
 const saveButtonId = 'saveButton';
 
@@ -60,6 +62,15 @@ const render = () => {
             onOptionClicked: onModelClicked
         });
 
+    select("#y-check")
+        .call(checkBox, {
+            checked: true,
+            onCheckClicked: check => {
+                showYAxis = check;
+                render();
+            }
+        });
+
     const filterData = (dataset) => {
         const filteredDataset = dataset.filter((row) => {
             let modelMatch = row["model"] === model;
@@ -82,18 +93,20 @@ const render = () => {
         data: filteredData,
         innerWidth: innerWidth,
         innerHeight: innerHeight,
-        margin: { top: 60, right: 40, bottom: 88, left: 150 }
+        margin: { top: 60, right: 40, bottom: 88, left: 150 },
+        context: context,
+        showYAxis: showYAxis
     });
 
-    svg.append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", innerWidth)
-        .attr("height", innerHeight)
-        .attr("transform", `translate(${margin.left},${margin.top})`)
-        .style("fill", "none")
-        .style("stroke", "black")
-        .style("stroke-width", "1px");
+    // svg.append("rect")
+    //     .attr("x", 0)
+    //     .attr("y", 0)
+    //     .attr("width", innerWidth)
+    //     .attr("height", innerHeight)
+    //     .attr("transform", `translate(${margin.left},${margin.top})`)
+    //     .style("fill", "none")
+    //     .style("stroke", "black")
+    //     .style("stroke-width", "1px");
 };
 
 // Load data

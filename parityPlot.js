@@ -12,13 +12,17 @@ const svg = select('svg');
 const width = +svg.attr('width');
 const height = +svg.attr('height');
 
-let showCData = true;
-let showCHData = true;
+let showTData = false;
+let showHEData = true;
+let showSData = true;
+
+let showXAxis = true;
+let showYAxis = true;
 
 let rawData;
 
-let feature = "topo";
-let features = ["topo", "naive", "spatial"]
+let context = "C";
+let contexts = ["C", "CH"];
 let response = "ACTIVITY";
 let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 let model = "MLR";
@@ -81,44 +85,79 @@ const render = () => {
             onOptionClicked: onTimeClicked
         });
 
-    select("#feature-menu")
+    select("#context-menu")
         .call(dropDownMenu, {
-            options: features,
-            onOptionClicked: onFeatureClicked
+            options: contexts,
+            onOptionClicked: onContextClicked
         });
     // Checkbox
-    select("#c-checkbox")
+    select("#T-checkbox")
         .call(checkBox, {
-            checked: true,
+            checked: false,
             onCheckClicked: check => {
-                showCData = check;
+                showTData = check;
                 render();
             }
         });
 
-    select("#ch-checkbox")
+    select("#HE-checkbox")
         .call(checkBox, {
             checked: true,
             onCheckClicked: check => {
-                showCHData = check;
+                showHEData = check;
                 render();
             }
         });
+
+    select("#S-checkbox")
+        .call(checkBox, {
+            checked: true,
+            onCheckClicked: check => {
+                showSData = check;
+                render();
+            }
+        });
+
+    select("#x-check")
+        .call(checkBox, {
+            checked: true,
+            onCheckClicked: check => {
+                showXAxis = check;
+                render();
+            }
+        });
+    select("#y-check")
+        .call(checkBox, {
+            checked: true,
+            onCheckClicked: check => {
+                showYAxis = check;
+                render();
+            }
+        });
+
 
     const filterData = (dataset) => {
         const filteredDataset = dataset.filter((row, index) => {
             let modelMatch = row["model"] === model;
             let responseMatch = row["response"] === response;
-            let featureMatch = row["feature"] === feature;
+            let contextMatch = row["context"] === context;
             let timeMatch = parseInt(row["timepoint"]) === parseInt(time);
 
-            let contextMatch;
-            if (showCHData && showCData) {
-                contextMatch = row["context"] === "C" || row["context"] === "CH";
-            } else if (showCHData) {
-                contextMatch = row["context"] === "CH";
-            } else if (showCData) {
-                contextMatch = row["context"] === "C";
+            let featureMatch;
+            if (showTData && showHEData && showSData) {
+                featureMatch = row["feature"] === "naive" || row["feature"] === "topo" || row["feature"] === "spatial";
+            } else if (showTData && showHEData) {
+                featureMatch = row["feature"] === "naive" || row["feature"] === "topo";
+            } else if (showTData && showSData) {
+                featureMatch = row["feature"] === "naive" || row["feature"] === "spatial";
+            } else if (showHEData && showSData) {
+                featureMatch = row["feature"] === "topo" || row["feature"] === "spatial";
+            } else if (showTData) {
+                featureMatch = row["feature"] === "naive";
+            } else if (showHEData) {
+                featureMatch = row["feature"] === "topo";
+            } else if (showSData) {
+                featureMatch = row["feature"] === "spatial";
             }
             return modelMatch && responseMatch && featureMatch && contextMatch && timeMatch;
         });
@@ -133,24 +172,16 @@ const render = () => {
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
     svg.call(parityPlot, {
-        xValue: d => d["y_true"],
-        yValue: d => d["y_pred"],
-        circleRadius: 13,
+        xValue: d => d["y_pred"],
+        yValue: d => d["y_true"],
+        circleRadius: 6,
         margin: { top: 60, right: 40, bottom: 88, left: 150 },
         innerWidth: innerWidth,
         innerHeight: innerHeight,
         data: filteredData,
+        showXAxis: showXAxis,
+        showYAxis: showYAxis,
     });
-
-    svg.append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", innerWidth)
-        .attr("height", innerHeight)
-        .attr("transform", `translate(${margin.left},${margin.top})`)
-        .style("fill", "none")
-        .style("stroke", "black")
-        .style("stroke-width", "1px");
 
 };
 
@@ -159,7 +190,6 @@ const dataPromise = loadParityData(dataPath).then(newData => {
     rawData = newData;
 });
 Promise.all([dataPromise]).then(() => { render(); });
-
 
 
 const onResponseClicked = resp => {
@@ -177,7 +207,7 @@ const onTimeClicked = t => {
     render();
 };
 
-const onFeatureClicked = feat => {
-    feature = feat;
+const onContextClicked = cont => {
+    context = cont;
     render();
 };

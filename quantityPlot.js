@@ -15,6 +15,9 @@ const height = +svg.attr('height');
 let showCData = true;
 let showCHData = true;
 
+let showXAxis = true;
+let showYAxis = true;
+
 let rawData;
 
 let feature = "topo";
@@ -53,7 +56,7 @@ const render = () => {
 
             // Create a new link element
             const link = document.createElement('a');
-            link.download = "quant_plot_" + response + "_(" + features + ")_" + model + ".svg";
+            link.download = "quant_plot_" + response + "_(" + feature + ")_" + model + ".svg";
             link.href = url;
 
             // Simulate a click on the link element to trigger the download
@@ -105,6 +108,23 @@ const render = () => {
             }
         });
 
+    select("#x-check")
+        .call(checkBox, {
+            checked: true,
+            onCheckClicked: check => {
+                showXAxis = check;
+                render();
+            }
+        });
+    select("#y-check")
+        .call(checkBox, {
+            checked: true,
+            onCheckClicked: check => {
+                showYAxis = check;
+                render();
+            }
+        });
+
     const filterData = (dataset) => {
         const filteredDataset = dataset.filter((row, index) => {
             let modelMatch = row["model"] === model;
@@ -140,6 +160,9 @@ const render = () => {
         innerWidth: innerWidth,
         innerHeight: innerHeight,
         data: filteredData,
+        type: "quantity",
+        showXAxis: showXAxis,
+        showYAxis: showYAxis
     });
 
 };

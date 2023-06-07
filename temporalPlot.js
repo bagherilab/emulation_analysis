@@ -15,6 +15,9 @@ const height = +svg.attr('height');
 let showCData = true;
 let showCHData = true;
 
+let showXAxis = true;
+let showYAxis = true;
+
 let rawData;
 
 let features = "topo";
@@ -96,6 +99,23 @@ const render = () => {
             }
         });
 
+    select("#x-check")
+        .call(checkBox, {
+            checked: true,
+            onCheckClicked: check => {
+                showXAxis = check;
+                render();
+            }
+        });
+    select("#y-check")
+        .call(checkBox, {
+            checked: true,
+            onCheckClicked: check => {
+                showYAxis = check;
+                render();
+            }
+        });
+
     const filterData = (dataset) => {
         const filteredDataset = dataset.filter((row, index) => {
             let modelMatch = row["model"] === model;
@@ -129,17 +149,10 @@ const render = () => {
         innerWidth: innerWidth,
         innerHeight: innerHeight,
         data: filteredData,
+        type: "temporal",
+        showXAxis: showXAxis,
+        showYAxis: showYAxis
     });
-
-    svg.append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", innerWidth)
-        .attr("height", innerHeight)
-        .attr("transform", `translate(${margin.left},${margin.top})`)
-        .style("fill", "none")
-        .style("stroke", "black")
-        .style("stroke-width", "1px");
 };
 
 // Load data

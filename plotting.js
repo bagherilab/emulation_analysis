@@ -15,7 +15,9 @@ export const parityPlot = (selection, props) => {
         margin,
         innerWidth,
         innerHeight,
-        data
+        data,
+        showXAxis,
+        showYAxis,
     } = props;
 
     selection.selectAll('*').remove();
@@ -28,17 +30,19 @@ export const parityPlot = (selection, props) => {
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
     // get largest extend from both x and y values
-    const extentX = d3.extent(data, xValue);
-    const extentY = d3.extent(data, yValue);
-    const extentXY = [Math.min(extentX[0], extentY[0], -1), Math.max(extentX[1], extentY[1])];
+    const extentX = d3.extent(data, d => parseFloat(xValue(d)));
+    const extentY = d3.extent(data, d => parseFloat(yValue(d)));
+    const extentXY = [Math.min(extentX[0], extentY[0]), Math.max(extentX[1], extentY[1])];
 
     const xScale = scaleLinear()
         .domain(extentXY)
-        .range([0, innerWidth]);
+        .range([0, innerWidth])
+        .nice();
 
     const yScale = scaleLinear()
         .domain(extentXY)
-        .range([innerHeight, 0]);
+        .range([innerHeight, 0])
+        .nice();
 
     // Parity line
     gEnter.append('line')
@@ -57,39 +61,107 @@ export const parityPlot = (selection, props) => {
 
     markers.exit().remove();
 
+    // Training points
     markers.enter().append('g')
         .attr('class', '.dot')
         .merge(markers)
         .attr('transform', d => `translate(${xScale(xValue(d))},${yScale(yValue(d))})`)
         .each(function (d) {
-            if (d.context === "C") {
-                d3.select(this).append('circle')
-                    .attr('class', 'circle')
-                    .attr('r', circleRadius)
-                    .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()));
-            } else {
-                d3.select(this).append('rect')
-                    .attr('class', 'square')
-                    .attr('x', -circleRadius)
-                    .attr('y', -circleRadius)
-                    .attr('width', circleRadius * 2)
-                    .attr('height', circleRadius * 2)
-                    .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()));
+            if (d.set === "train") {
+                if (d.feature === "naive") {
+                    d3.select(this).append('circle')
+                        .attr('class', 'circle')
+                        .attr('r', circleRadius / 1.4)
+                        .attr('fill', "none")
+                        .attr('stroke', getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                        .attr('stroke-width', 2);
+                } else if (d.feature === "topo") {
+                    d3.select(this).append('rect')
+                        .attr('class', 'square')
+                        .attr('x', -circleRadius)
+                        .attr('y', -circleRadius)
+                        .attr('width', circleRadius * 1.4)
+                        .attr('height', circleRadius * 1.4)
+                        .attr('fill', "none")
+                        .attr('stroke', getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                        .attr('stroke-width', 2);
+                } else if (d.feature === "spatial") {
+                    d3.select(this).append('polygon')
+                        .attr('class', 'triangle')
+                        .attr('points', `${-circleRadius / 1.4},${circleRadius / 1.4} ${circleRadius / 1.4},${circleRadius / 1.4} 0,${-circleRadius * 1}`)
+                        .attr('fill', "none")
+                        .attr('stroke', getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                        .attr('stroke-width', 2);
+                }
             }
-        })
-        .attr("opacity", 0.4);
+        });
 
-    const xAxis = axisBottom(xScale)
-        .ticks(0)
-        .tickFormat(d3.format(".1f"))
-        .tickSize(0)
-        .tickPadding(15);
+    // Test points
+    markers.enter().append('g')
+        .attr('class', '.dot')
+        .merge(markers)
+        .attr('transform', d => `translate(${xScale(xValue(d))},${yScale(yValue(d))})`)
+        .each(function (d) {
+            if (d.set === "test") {
+                if (d.feature === "naive") {
+                    d3.select(this).append('circle')
+                        .attr('class', 'circle')
+                        .attr('r', circleRadius)
+                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                        .attr('stroke', "none")
+                        .attr('stroke-width', 2);
+                } else if (d.feature === "topo") {
+                    d3.select(this).append('rect')
+                        .attr('class', 'square')
+                        .attr('x', -circleRadius)
+                        .attr('y', -circleRadius)
+                        .attr('width', circleRadius * 2)
+                        .attr('height', circleRadius * 2)
+                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                        .attr('stroke', "none")
+                        .attr('stroke-width', 2);
+                } else if (d.feature === "spatial") {
+                    d3.select(this).append('polygon')
+                        .attr('class', 'triangle')
+                        .attr('points', `${-circleRadius},${circleRadius} ${circleRadius},${circleRadius} 0,${-circleRadius * 1.4}`)
+                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                        .attr('stroke', "none")
+                        .attr('stroke-width', 2);
+                }
+            }
 
-    const yAxis = axisLeft(yScale)
-        .ticks(0)
-        .tickFormat(d3.format(".1f"))
-        .tickSize(0)
-        .tickPadding(10);
+        });
+
+    let xAxis;
+    if (showXAxis) {
+        xAxis = axisBottom(xScale)
+            .ticks(3)
+            .tickFormat(d3.format(".1f"))
+            .tickSize(3)
+            .tickPadding(15);
+    } else {
+        xAxis = axisBottom(xScale)
+            .ticks(0)
+            .tickFormat(d3.format(".1f"))
+            .tickSize(3)
+            .tickPadding(15);
+    }
+
+    let yAxis;
+    if (showYAxis) {
+        yAxis = axisLeft(yScale)
+            .ticks(3)
+            .tickFormat(d3.format(".1f"))
+            .tickSize(3)
+            .tickPadding(15);
+    } else {
+        yAxis = axisLeft(yScale)
+            .ticks(0)
+            .tickFormat(d3.format(".1f"))
+            .tickSize(3)
+            .tickPadding(15);
+    }
+
 
     const yAxisG = g.select('.y-axis');
     const yAxisGEnter = gEnter
@@ -119,6 +191,8 @@ export const barPlot = (selection, props) => {
         innerWidth,
         innerHeight,
         margin,
+        context,
+        showYAxis
     } = props;
 
     // Extract unique responses and features from the data
@@ -133,7 +207,7 @@ export const barPlot = (selection, props) => {
 
     const yScale = d3
         .scaleLinear()
-        .domain([-0.1, 0.6])
+        .domain([-0.1, 1.1])
         .range([innerHeight, 0])
         .nice();
 
@@ -179,16 +253,22 @@ export const barPlot = (selection, props) => {
             // Get features from response dictionary
             const features = response.values;
 
-            // Iterate over features in pairs
-            for (let i = 0; i < features.length - 1; i += 2) {
+            // Iterate over features in triplets
+            for (let i = 0; i < features.length - 1; i += 3) {
                 const feature1 = features[i];
                 const feature2 = features[i + 1];
+                const feature3 = features[i + 2];
+
 
                 // Get sets from feature dictionaries
-                const topo_sets = feature1.values;
-                const spatial_sets = feature2.values;
+                const naive_sets = feature1.values;
+                const topo_sets = feature2.values;
+                const spatial_sets = feature3.values;
 
                 // Get values from sets dictionaries
+                const naive_test_value = naive_sets[0].value;
+                const naive_train_value = naive_sets[1].value;
+
                 const topo_test_value = topo_sets[0].value;
                 const topo_train_value = topo_sets[1].value;
 
@@ -197,63 +277,94 @@ export const barPlot = (selection, props) => {
 
 
                 // Graph the bars using the values
-                const x1 = xScale(response.key) + xScale.bandwidth() * i / 2;
-                const x2 = xScale(response.key) + xScale.bandwidth() * (i + 1) / 2;
+                const x1 = xScale(response.key) + xScale.bandwidth() * i / 3;
+                const x2 = xScale(response.key) + xScale.bandwidth() * (i + 1) / 3;
+                const x3 = xScale(response.key) + xScale.bandwidth() * (i + 2) / 3;
 
                 // Plot the training bars
+                const naive_train = yScale(Math.max(0, naive_train_value)); // Use Math.max to ensure positive values start at 0
                 const topo_train = yScale(Math.max(0, topo_train_value)); // Use Math.max to ensure positive values start at 0
                 const spatial_train = yScale(Math.max(0, spatial_train_value)); // Use Math.max to ensure positive values start at 0
-                const height1 = Math.abs(yScale(topo_train_value) - yScale(0)); // Calculate the height relative to 0
-                const height2 = Math.abs(yScale(spatial_train_value) - yScale(0)); // Calculate the height relative to 0
+                const height1 = Math.abs(yScale(naive_train_value) - yScale(0)); // Calculate the height relative to 0
+                const height2 = Math.abs(yScale(topo_train_value) - yScale(0)); // Calculate the height relative to 0
+                const height3 = Math.abs(yScale(spatial_train_value) - yScale(0)); // Calculate the height relative to 0
 
                 d3.select(this)
                     .append("rect")
                     .attr("class", "train-bar")
                     .attr("x", x1)
-                    .attr("y", topo_train)
-                    .attr("width", xScale.bandwidth() / 2)
+                    .attr("y", naive_train)
+                    .attr("width", xScale.bandwidth() / 3)
                     .attr("height", height1)
+                    .attr("fill", getColor("C-naive-TRAIN"));
+
+                d3.select(this)
+                    .append("rect")
+                    .attr("class", "train-bar")
+                    .attr("x", x2)
+                    .attr("y", topo_train)
+                    .attr("width", xScale.bandwidth() / 3)
+                    .attr("height", height2)
                     .attr("fill", getColor("C-topo-TRAIN"));
 
                 d3.select(this)
                     .append("rect")
                     .attr("class", "train-bar")
-                    .attr("x", x2)
+                    .attr("x", x3)
                     .attr("y", spatial_train)
-                    .attr("width", xScale.bandwidth() / 2)
-                    .attr("height", height2)
+                    .attr("width", xScale.bandwidth() / 3)
+                    .attr("height", height3)
                     .attr("fill", getColor("CH-spatial-TRAIN"));
 
                 // Plot the test R^2 values on top of the bars
+                const naive_test = yScale(Math.max(0, naive_test_value)); // Use Math.max to ensure positive values start at 0
                 const topo_test = yScale(Math.max(0, topo_test_value)); // Use Math.max to ensure positive values start at 0
                 const spatial_test = yScale(Math.max(0, spatial_test_value)); // Use Math.max to ensure positive values start at 0
-                const height3 = Math.abs(yScale(topo_test_value) - yScale(0)); // Calculate the height relative to 0
-                const height4 = Math.abs(yScale(spatial_test_value) - yScale(0)); // Calculate the height relative to 0
+                const height4 = Math.abs(yScale(naive_test_value) - yScale(0)); // Calculate the height relative to 0
+                const height5 = Math.abs(yScale(topo_test_value) - yScale(0)); // Calculate the height relative to 0
+                const height6 = Math.abs(yScale(spatial_test_value) - yScale(0)); // Calculate the height relative to 0
 
                 d3.select(this)
                     .append("rect")
                     .attr("class", "test-r2")
                     .attr("x", x1)
-                    .attr("y", topo_test)
-                    .attr("width", xScale.bandwidth() / 2)
-                    .attr("height", height3)
-                    .attr("fill", getColor("C-topo-TEST"));
+                    .attr("y", naive_test)
+                    .attr("width", xScale.bandwidth() / 3)
+                    .attr("height", height4)
+                    .attr("fill", getColor(context + "-naive-TEST"));
 
                 d3.select(this)
                     .append("rect")
                     .attr("class", "test-r2")
                     .attr("x", x2)
+                    .attr("y", topo_test)
+                    .attr("width", xScale.bandwidth() / 3)
+                    .attr("height", height5)
+                    .attr("fill", getColor(context + "-topo-TEST"));
+
+                d3.select(this)
+                    .append("rect")
+                    .attr("class", "test-r2")
+                    .attr("x", x3)
                     .attr("y", spatial_test)
-                    .attr("width", xScale.bandwidth() / 2)
-                    .attr("height", height4)
-                    .attr("fill", getColor("CH-spatial-TEST"));
+                    .attr("width", xScale.bandwidth() / 3)
+                    .attr("height", height6)
+                    .attr("fill", getColor(context + "-spatial-TEST"));
             }
         });
 
-    const yAxis = d3.axisLeft(yScale)
-        .ticks(0)
-        .tickSize(-innerWidth)
-        .tickPadding(10);
+    let yAxis;
+    if (showYAxis) {
+        yAxis = d3.axisLeft(yScale)
+            .tickValues([0.0, 0.5, 1.0])
+            .tickSize(0)
+            .tickPadding(10);
+    } else {
+        yAxis = d3.axisLeft(yScale)
+            .tickValues([])
+            .tickSize(0)
+            .tickPadding(0);
+    }
 
     const yAxisG = g.select('.y-axis');
     const yAxisGEnter = gEnter
@@ -265,7 +376,7 @@ export const barPlot = (selection, props) => {
     yAxisG
         .merge(yAxisGEnter)
         .call(yAxis)
-        .selectAll('.domain, .tick line')
+        .selectAll('.tick line')
         .remove();
 };
 
@@ -277,12 +388,14 @@ export const linePlot = (selection, props) => {
         innerWidth,
         innerHeight,
         data,
+        type,
+        showXAxis,
+        showYAxis
     } = props;
 
     const sortedData = data.sort((a, b) => xValue(a) - xValue(b));
 
-    // const showXAxis = document.getElementById('xAxisCheckbox').checked;
-    // const showYAxis = document.getElementById('yAxisCheckbox').checked;
+    selection.selectAll('*').remove();
 
     const g = selection.selectAll('.container').data([null]);
     const gEnter = g.enter().append('g')
@@ -302,14 +415,24 @@ export const linePlot = (selection, props) => {
 
     if (minValue < breakPoint) {
         yScale = d3.scaleLinear()
-            .domain([minValue, breakPoint, -0.1, maxValue])
+            .domain([minValue, breakPoint, -0.1, 1.1])
             .range([innerHeight, innerHeight / 1.3 + 1, innerHeight / 1.3 - 1, 0]);
     } else {
         yScale = d3.scaleLinear()
-            .domain([-0.3, 1.0])
+            .domain([-0.3, 1.1])
             .range([innerHeight, 0])
             .nice();
     }
+
+    const zeroLine = g.merge(gEnter)
+        .append("line")
+        .attr("class", "zero-line")
+        .attr("x1", 0)
+        .attr("x2", innerWidth)
+        .attr("y1", yScale(0))
+        .attr("y2", yScale(0))
+        .attr("stroke", "black")
+        .attr("stroke-width", 1);
 
     const lineGenerator = d3.line()
         .x(d => xScale(xValue(d)))
@@ -325,7 +448,6 @@ export const linePlot = (selection, props) => {
         .key(d => d.feature)
         .key(d => d.set)
         .entries(sortedData);
-
 
     const linesData = nestedData.flatMap(contextData =>
         contextData.values.flatMap(featureData =>
@@ -364,32 +486,66 @@ export const linePlot = (selection, props) => {
         .attr('d', d => lineGenerator(d.values))
         .attr('fill', 'none')
         .attr('stroke', d => getColor(d.key))
-        .attr('stroke-width', 3)
+        .attr('stroke-width', 8)
         .attr('stroke-dasharray', d => d.key.startsWith("CH") ? '5 5' : 'none');
 
-    const xAxis = axisBottom(xScale)
-        // .tickValues([0, 2, 4, 6, 8, 10, 12, 14])
-        // .tickValues([100, 200, 300, 400, 500])
-        .tickFormat(d3.format(".0f"))
-        .ticks(4)
-        .tickSize(0)
-        .tickPadding(10);
+
+    let xAxis;
+    if (showXAxis) {
+        if (type === "quantity") {
+            xAxis = axisBottom(xScale)
+                .tickValues([100, 300, 500])
+                .tickFormat(d3.format(".0f"))
+                .tickSize(0)
+                .tickPadding(10);
+        } else if (type === "temporal") {
+            xAxis = axisBottom(xScale)
+                .tickValues([-1, 2, 5, 8, 11, 14])
+                .tickFormat(d3.format(".0f"))
+                .tickSize(0)
+                .tickPadding(10);
+        }
+    } else {
+        xAxis = axisBottom(xScale)
+            .ticks(0)
+            .tickSize(0)
+            .tickPadding(10);
+    }
 
     let yAxis;
+    let minYTick = minValue;
     if (minValue < breakPoint) {
-        yAxis = axisLeft(yScale)
-            .tickValues([minValue, (minValue / 2), 0.0, 0.2, 0.4, 0.6, 0.8])
-            // .ticks(0)
-            .tickFormat(d3.format(".1f"))
-            .tickSize(0)
-            .tickPadding(10);
+        if (minYTick / 2 > -1) {
+            minYTick = -2.5;
+        }
+
+        if (showYAxis) {
+            yAxis = axisLeft(yScale)
+                .tickValues([(minYTick / 2), 0.0, 0.5, 1.0])
+                .tickFormat(d3.format(".1f"))
+                .tickSize(3)
+                .tickPadding(10);
+        } else {
+            yAxis = axisLeft(yScale)
+                .ticks(0)
+                .tickFormat(d3.format(".1f"))
+                .tickSize(3)
+                .tickPadding(10);
+        }
     } else {
-        yAxis = axisLeft(yScale)
-            .ticks(4)
-            // .ticks(0)
-            .tickFormat(d3.format(".1f"))
-            .tickSize(0)
-            .tickPadding(10);
+        if (showYAxis) {
+            yAxis = axisLeft(yScale)
+                .tickValues([0.0, 0.5, 1.0])
+                .tickFormat(d3.format(".1f"))
+                .tickSize(3)
+                .tickPadding(10);
+        } else {
+            yAxis = axisLeft(yScale)
+                .ticks(0)
+                .tickFormat(d3.format(".1f"))
+                .tickSize(3)
+                .tickPadding(10);
+        }
     }
 
 
@@ -402,9 +558,9 @@ export const linePlot = (selection, props) => {
     yAxisG
         .merge(yAxisGEnter)
         .call(yAxis)
-        .attr("font-size", "50px")
-        .selectAll('.domain, .tick line')
-        .remove();
+        .attr("font-size", "50px");
+    // .selectAll('.domain, .tick line')
+    // .remove();
 
     const xAxisG = g.select('.x-axis');
     const xAxisGEnter = gEnter
@@ -415,27 +571,27 @@ export const linePlot = (selection, props) => {
         .merge(xAxisGEnter)
         .attr('transform', `translate(0,${innerHeight})`)
         .call(xAxis)
-        .attr("font-size", "50px")
-        .selectAll('.domain, .tick line')
-        .remove();
+        .attr("font-size", "50px");
+    // .selectAll('.domain, .tick line')
+    // .remove();
 
     // make a black box around the svg
-    const outline = g.merge(gEnter)
-        .selectAll('.break-rect')
-        .data([null]);
+    // const outline = g.merge(gEnter)
+    //     .selectAll('.break-rect')
+    //     .data([null]);
 
-    outline.exit().remove();
+    // outline.exit().remove();
 
-    outline.enter().append("rect")
-        .attr('class', 'black-box')
-        .merge(outline)
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", innerWidth)
-        .attr("height", innerHeight)
-        .style("fill", "none")
-        .style("stroke", "black")
-        .style("stroke-width", "1px");
+    // outline.enter().append("rect")
+    //     .attr('class', 'black-box')
+    //     .merge(outline)
+    //     .attr("x", 0)
+    //     .attr("y", 0)
+    //     .attr("width", innerWidth)
+    //     .attr("height", innerHeight)
+    //     .style("fill", "none")
+    //     .style("stroke", "black")
+    //     .style("stroke-width", "1px");
 
     if (minValue < breakPoint) {
         // Add a break rectanlge to signify where the break in the y axis is
@@ -448,30 +604,46 @@ export const linePlot = (selection, props) => {
         breakRect.enter().append('rect')
             .attr('class', 'break-rect')
             .merge(breakRect)
-            .attr('x', -10)
-            .attr('width', 20)
-            .attr('height', (d, i) => i === 0 ? 12 : 6)
+            .attr('x', -20)
+            .attr('width', 40)
+            .attr('height', (d, i) => i === 0 ? 20 : 10)
             .attr('fill', (d, i) => i === 1 ? 'white' : 'black')
-            .attr('y', (d, i) => i === 0 ? innerHeight / 1.3 : innerHeight / 1.3 + 3);
+            .attr('y', (d, i) => i === 0 ? innerHeight / 1.3 : innerHeight / 1.3 + 5);
     }
 
 };
 
 const getColor = key => {
     const colorMap = {
-        "C-naive-TEST": "#61b374", // light green
-        "CH-naive-TEST": "#003900", // dark green
-        "C-topo-TEST": "#9ecae1", // light blue
-        "CH-topo-TEST": "#3182bd", // dark blue
-        "C-spatial-TEST": "#FFCC99", // light orange
-        "CH-spatial-TEST": "#FF6600", // dark orange
+        "C-naive-TEST": "#53d83a", // light green
+        "CH-naive-TEST": "#006600", // dark green
+        "C-topo-TEST": "#4cb6da", // light blue
+        "CH-topo-TEST": "#004c6d", // dark blue
+        "C-spatial-TEST": "#FF7F00", // light orange
+        "CH-spatial-TEST": "#FF2400", // dark orange
 
-        "C-naive-TRAIN": "#999999", // light gray
-        "CH-naive-TRAIN": "#333333", // dark gray
+        "C-naive-TRAIN": "#CCCCCC", // light gray
+        "CH-naive-TRAIN": "#666666", // dark gray
         "C-topo-TRAIN": "#999999", // light gray
-        "CH-topo-TRAIN": "#333333", // dark gray
-        "C-spatial-TRAIN": "#999999", // light gray
-        "CH-spatial-TRAIN": "#333333", // dark gray
+        "CH-topo-TRAIN": "#666666", // dark gray
+        "C-spatial-TRAIN": "#666666", // light gray
+        "CH-spatial-TRAIN": "#666666", // dark gray
+
+        // "C-naive-TEST": "#004c6d", // dark blue
+        // "C-topo-TEST": "#004c6d", // 
+        // "C-spatial-TEST": "#004c6d", // 
+
+        // "CH-naive-TEST": "#333333", // dark gray
+        // "CH-topo-TEST": "#333333", // 
+        // "CH-spatial-TEST": "#333333", // 
+
+        // "C-naive-TRAIN": "#4cb6da", // light blue
+        // "C-topo-TRAIN": "#4cb6da", //
+        // "C-spatial-TRAIN": "#4cb6da", // 
+
+        // "CH-naive-TRAIN": "#BDC4CB", // light gray
+        // "CH-topo-TRAIN": "#BDC4CB", //
+        // "CH-spatial-TRAIN": "#BDC4CB", //
     };
     return colorMap[key] || 'purple';
 };
