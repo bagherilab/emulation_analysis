@@ -255,10 +255,12 @@ export const barPlot = (selection, props) => {
 
             // Iterate over features in triplets
             for (let i = 0; i < features.length - 1; i += 3) {
-                const feature1 = features[i];
-                const feature2 = features[i + 1];
-                const feature3 = features[i + 2];
-
+                // naive features
+                const feature1 = features.find(d => d.key === "naive");
+                // topo features
+                const feature2 = features.find(d => d.key === "topo");
+                // spatial features
+                const feature3 = features.find(d => d.key === "spatial");
 
                 // Get sets from feature dictionaries
                 const naive_sets = feature1.values;
@@ -277,9 +279,16 @@ export const barPlot = (selection, props) => {
 
 
                 // Graph the bars using the values
-                const x1 = xScale(response.key) + xScale.bandwidth() * i / 3;
-                const x2 = xScale(response.key) + xScale.bandwidth() * (i + 1) / 3;
-                const x3 = xScale(response.key) + xScale.bandwidth() * (i + 2) / 3;
+                const gapBetweenBars = 0;
+                const gapBetweenSets = 0.05 * xScale.bandwidth();
+                const barWidth = (xScale.bandwidth() - gapBetweenBars) / 7;
+
+                const xNaiveTrain = xScale(response.key) + i * (barWidth + gapBetweenBars);
+                const xNaiveTest = xNaiveTrain + barWidth + gapBetweenBars;
+                const xTopoTrain = xNaiveTest + barWidth + gapBetweenSets;
+                const xTopoTest = xTopoTrain + barWidth + gapBetweenBars;
+                const xSpatialTrain = xTopoTest + barWidth + gapBetweenSets;
+                const xSpatialTest = xSpatialTrain + barWidth + gapBetweenBars;
 
                 // Plot the training bars
                 const naive_train = yScale(Math.max(0, naive_train_value)); // Use Math.max to ensure positive values start at 0
@@ -292,29 +301,35 @@ export const barPlot = (selection, props) => {
                 d3.select(this)
                     .append("rect")
                     .attr("class", "train-bar")
-                    .attr("x", x1)
+                    .attr("x", xNaiveTrain)
                     .attr("y", naive_train)
-                    .attr("width", xScale.bandwidth() / 3)
+                    .attr("width", barWidth)
                     .attr("height", height1)
-                    .attr("fill", getColor("C-naive-TRAIN"));
+                    .attr("fill", "none")
+                    .attr("stroke", getColor("C-naive-TRAIN"))
+                    .attr("stroke-width", 5);
 
                 d3.select(this)
                     .append("rect")
                     .attr("class", "train-bar")
-                    .attr("x", x2)
+                    .attr("x", xTopoTrain)
                     .attr("y", topo_train)
-                    .attr("width", xScale.bandwidth() / 3)
+                    .attr("width", barWidth)
                     .attr("height", height2)
-                    .attr("fill", getColor("C-topo-TRAIN"));
+                    .attr("fill", "none")
+                    .attr("stroke", getColor("C-topo-TRAIN"))
+                    .attr("stroke-width", 5);
 
                 d3.select(this)
                     .append("rect")
                     .attr("class", "train-bar")
-                    .attr("x", x3)
+                    .attr("x", xSpatialTrain)
                     .attr("y", spatial_train)
-                    .attr("width", xScale.bandwidth() / 3)
+                    .attr("width", barWidth)
                     .attr("height", height3)
-                    .attr("fill", getColor("CH-spatial-TRAIN"));
+                    .attr("fill", "none")
+                    .attr("stroke", getColor("C-spatial-TRAIN"))
+                    .attr("stroke-width", 5);
 
                 // Plot the test R^2 values on top of the bars
                 const naive_test = yScale(Math.max(0, naive_test_value)); // Use Math.max to ensure positive values start at 0
@@ -327,27 +342,27 @@ export const barPlot = (selection, props) => {
                 d3.select(this)
                     .append("rect")
                     .attr("class", "test-r2")
-                    .attr("x", x1)
+                    .attr("x", xNaiveTest)
                     .attr("y", naive_test)
-                    .attr("width", xScale.bandwidth() / 3)
+                    .attr("width", barWidth)
                     .attr("height", height4)
                     .attr("fill", getColor(context + "-naive-TEST"));
 
                 d3.select(this)
                     .append("rect")
                     .attr("class", "test-r2")
-                    .attr("x", x2)
+                    .attr("x", xTopoTest)
                     .attr("y", topo_test)
-                    .attr("width", xScale.bandwidth() / 3)
+                    .attr("width", barWidth)
                     .attr("height", height5)
                     .attr("fill", getColor(context + "-topo-TEST"));
 
                 d3.select(this)
                     .append("rect")
                     .attr("class", "test-r2")
-                    .attr("x", x3)
+                    .attr("x", xSpatialTest)
                     .attr("y", spatial_test)
-                    .attr("width", xScale.bandwidth() / 3)
+                    .attr("width", barWidth)
                     .attr("height", height6)
                     .attr("fill", getColor(context + "-spatial-TEST"));
             }
@@ -414,11 +429,7 @@ export const linePlot = (selection, props) => {
             .range([0, innerWidth]);
     }
 
-
-    const minValue = d3.min(sortedData, yValue);
-    const maxValue = d3.max(sortedData, yValue);
-    let yScale;
-    yScale = d3.scaleLinear()
+    const yScale = d3.scaleLinear()
         .domain([-0.1, 1.1])
         .range([innerHeight, 0]);
 
@@ -432,6 +443,69 @@ export const linePlot = (selection, props) => {
         .attr("stroke", "black")
         .attr("stroke-width", 1);
 
+    // Clip path
+    g.merge(gEnter)
+        .append("defs")
+        .append("clipPath")
+        .attr("id", "clip-path")
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", innerWidth)
+        .attr("height", innerHeight);
+
+    // Data points
+    const dataPointRadius = 8;
+
+    const circleGenerator = d3.symbol().type(d3.symbolCircle).size(dataPointRadius * dataPointRadius);
+
+    const testPointsData = sortedData.flatMap(d => {
+        const x = xValue(d);
+        const testR2s = Array.isArray(d.test_r2s) ? d.test_r2s : JSON.parse(d.test_r2s);
+        const set = "TEST";
+        const feature = d.feature;
+        return testR2s
+            .filter(testR2 => testR2 >= -0.1)
+            .map(testR2 => ({ x, y: testR2, set, feature }))
+    });
+
+    const trainPointsData = sortedData.flatMap(d => {
+        const x = xValue(d);
+        const trainR2s = Array.isArray(d.train_r2s) ? d.train_r2s : JSON.parse(d.train_r2s);
+        const set = "TRAIN";
+        const feature = d.feature;
+        return trainR2s
+            .filter(trainR2 => trainR2 >= -0.1)
+            .map(trainR2 => ({ x, y: trainR2, set, feature }))
+    });
+
+    const testPoints = g.merge(gEnter)
+        .selectAll('.point')
+        .data(testPointsData);
+
+    const trainPoints = g.merge(gEnter)
+        .selectAll('.point')
+        .data(trainPointsData);
+
+    testPoints.exit().remove();
+    trainPoints.exit().remove();
+
+    trainPoints.enter().append('path')
+        .attr('class', 'point')
+        .merge(trainPoints)
+        .attr('d', circleGenerator)
+        .attr('transform', d => `translate(${xScale(d.x)},${yScale(d.y)})`)
+        .attr('fill', d => getColor("C-" + d.feature + "-" + d.set));
+
+    testPoints.enter().append('path')
+        .attr('class', 'point')
+        .merge(testPoints)
+        .attr('d', circleGenerator)
+        .attr('transform', d => `translate(${xScale(d.x)},${yScale(d.y)})`)
+        .attr('fill', d => getColor("C-" + d.feature + "-" + d.set));
+
+
+    // Line
     const lineGenerator = d3.line()
         .x(d => xScale(xValue(d)))
         .y(d => yScale(yValue(d)));
@@ -454,16 +528,7 @@ export const linePlot = (selection, props) => {
         )
     );
 
-    // Clip path
-    g.merge(gEnter)
-        .append("defs")
-        .append("clipPath")
-        .attr("id", "clip-path")
-        .append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", innerWidth)
-        .attr("height", innerHeight);
+
 
     const lines = g.merge(gEnter)
         .selectAll('.line')
@@ -517,8 +582,6 @@ export const linePlot = (selection, props) => {
             .tickSize(3)
             .tickPadding(10);
     }
-
-
 
     const yAxisG = g.select('.y-axis');
     const yAxisGEnter = gEnter

@@ -24,7 +24,6 @@ let rawData;
 let context = "C";
 let contexts = ["C", "CH"];
 let feature = "topo";
-let features = ["topo", "spatial"]
 let response = "ACTIVITY";
 let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 let model = "MLR";
@@ -119,6 +118,7 @@ const render = () => {
                 render();
             }
         });
+
     select("#x-check")
         .call(checkBox, {
             checked: true,
