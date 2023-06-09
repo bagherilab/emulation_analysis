@@ -78,11 +78,11 @@ const render = () => {
             onOptionClicked: onModelClicked
         });
 
-    select("#context-menu")
-        .call(dropDownMenu, {
-            options: contexts,
-            onOptionClicked: onContextClicked
-        });
+    // select("#context-menu")
+    //     .call(dropDownMenu, {
+    //         options: contexts,
+    //         onOptionClicked: onContextClicked
+    //     });
     // Checkbox
     select("#T-checkbox")
         .call(checkBox, {
@@ -132,7 +132,6 @@ const render = () => {
         const filteredDataset = dataset.filter((row, index) => {
             let modelMatch = row["model"] === model;
             let responseMatch = row["response"] === response;
-            let contextMatch = row["context"] === context;
 
             let featureMatch;
             if (showTData && showHEData && showSData) {
@@ -150,7 +149,7 @@ const render = () => {
             } else if (showSData) {
                 featureMatch = row["feature"] === "spatial";
             }
-            return modelMatch && responseMatch && contextMatch;
+            return modelMatch && responseMatch;
         });
 
         return filteredDataset;
@@ -193,7 +192,7 @@ const onModelClicked = mod => {
     render();
 };
 
-const onContextClicked = cont => {
-    context = cont;
-    render();
-};
+// const onContextClicked = cont => {
+//     context = cont;
+//     render();
+// };

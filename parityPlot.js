@@ -19,6 +19,8 @@ let showSData = true;
 let showXAxis = true;
 let showYAxis = true;
 
+let showInitial = false;
+
 let rawData;
 
 let context = "C";
@@ -135,13 +137,21 @@ const render = () => {
             }
         });
 
+    select("#initial-check")
+        .call(checkBox, {
+            checked: false,
+            onCheckClicked: check => {
+                showInitial = check;
+                render();
+            }
+        });
 
     const filterData = (dataset) => {
         const filteredDataset = dataset.filter((row, index) => {
             let modelMatch = row["model"] === model;
             let responseMatch = row["response"] === response;
             let contextMatch = row["context"] === context;
-            let timeMatch = parseInt(row["timepoint"]) === parseInt(time);
+
 
             let featureMatch;
             if (showTData && showHEData && showSData) {
@@ -159,6 +169,14 @@ const render = () => {
             } else if (showSData) {
                 featureMatch = row["feature"] === "spatial";
             }
+
+            let timeMatch;
+            if (showInitial) {
+                timeMatch = parseInt(row["timepoint"]) === parseInt(time) || parseInt(row["timepoint"]) === 0;
+            } else {
+                timeMatch = parseInt(row["timepoint"]) === parseInt(time);
+            }
+
             return modelMatch && responseMatch && featureMatch && contextMatch && timeMatch;
         });
         return filteredDataset;
@@ -181,6 +199,8 @@ const render = () => {
         data: filteredData,
         showXAxis: showXAxis,
         showYAxis: showYAxis,
+        time: parseInt(time),
+        showInitial: showInitial,
     });
 
 };

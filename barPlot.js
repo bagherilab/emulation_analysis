@@ -20,7 +20,7 @@ let model = "MLR";
 let models = ["MLR", "RF", "SVR", "MLP"];
 let context = "C";
 
-let dataPath = "data/predicted/bar_r2.csv"
+let dataPath = "data/predicted/bar_r2_se.csv"
 
 const saveButtonId = 'saveButton';
 

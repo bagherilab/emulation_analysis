@@ -268,8 +268,8 @@ def combine_quantity_r_squares():
                 )
 
 
-ci_path = "data/predicted/temporal.csv"
-formatted_path = "data/predicted/transformed_temporal.csv"
+ci_path = "data/predicted/quant.csv"
+formatted_path = "data/predicted/transformed_quant.csv"
 
 
 def explode_ci():
@@ -422,8 +422,9 @@ def format_parity():
 
 
 if __name__ == "__main__":
+    combine_model_csvs()
     # combine_bar_plots_r_sqaures()
-    explode_ci()
+    # explode_ci()
     # format_floats()
     # remove_50_obs()
     # parity_plot_data()

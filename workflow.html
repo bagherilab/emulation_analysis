@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Workflow</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/d3@5.6.0/dist/d3.min.js"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</head>
+
+<body>
+    <p>Previous page:</p>
+    <button onclick="goBack()">Go back</button>
+
+    <svg width="2000" height="2000">
+        <!-- x, y top left -->
+
+        <!-- Trapezoid -->
+        <polygon points="200,700 200,100 600,350 600,450" fill="gray" />
+        <!-- Opposing trapezoid -->
+        <polygon points="1000,550 1000,350 1400,100 1400,700" fill="gray" />
+        <!-- Square in the middle of them -->
+        <polygon points="300,225 300,175 500,175 500,225" fill="gray" />
+
+    </svg>
+</body>
+
+</html>
