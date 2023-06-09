@@ -1,4 +1,5 @@
 .vscode/
+data/predicted/stored_results/
 
 .DS_Store
 node_modules

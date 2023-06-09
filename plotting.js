@@ -16,6 +16,7 @@ export const parityPlot = (selection, props) => {
         innerWidth,
         innerHeight,
         data,
+        r2Data,
         showXAxis,
         showYAxis,
         time,
@@ -74,7 +75,7 @@ export const parityPlot = (selection, props) => {
                     if (d.feature === "naive") {
                         d3.select(this).append('circle')
                             .attr('class', 'circle')
-                            .attr('r', circleRadius / 1.4)
+                            .attr('r', circleRadius / 1.5)
                             .attr('fill', d => d.set === "train" ? "none" : getColor("C-naive-TEST"))
                             .attr('stroke', d => d.set === "train" ? getColor("C-naive-TRAIN") : "none")
                             .attr('stroke-width', 2);
@@ -83,15 +84,15 @@ export const parityPlot = (selection, props) => {
                             .attr('class', 'square')
                             .attr('x', -circleRadius)
                             .attr('y', -circleRadius)
-                            .attr('width', circleRadius * 1.4)
-                            .attr('height', circleRadius * 1.4)
+                            .attr('width', circleRadius * 1.5)
+                            .attr('height', circleRadius * 1.5)
                             .attr('fill', d => d.set === "train" ? "none" : getColor("C-naive-TEST"))
                             .attr('stroke', d => d.set === "train" ? getColor("C-naive-TRAIN") : "none")
                             .attr('stroke-width', d => d.set === "train" ? 2 : 0);
                     } else if (d.feature === "spatial") {
                         d3.select(this).append('polygon')
                             .attr('class', 'triangle')
-                            .attr('points', `${-circleRadius / 1.4},${circleRadius / 1.4} ${circleRadius / 1.4},${circleRadius / 1.4} 0,${-circleRadius * 1}`)
+                            .attr('points', `${-circleRadius / 1.5},${circleRadius / 1.5} ${circleRadius / 1.5},${circleRadius / 1.5} 0,${-circleRadius * 1}`)
                             .attr('fill', d => d.set === "train" ? "none" : getColor("C-naive-TEST"))
                             .attr('stroke', d => d.set === "train" ? getColor("C-naive-TRAIN") : "none")
                             .attr('stroke-width', 2);
@@ -112,7 +113,7 @@ export const parityPlot = (selection, props) => {
                     if (d.feature === "naive") {
                         d3.select(this).append('circle')
                             .attr('class', 'circle')
-                            .attr('r', circleRadius / 1.4)
+                            .attr('r', circleRadius / 1.5)
                             .attr('fill', "none")
                             .attr('stroke', getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
                             .attr('stroke-width', 2);
@@ -121,15 +122,15 @@ export const parityPlot = (selection, props) => {
                             .attr('class', 'square')
                             .attr('x', -circleRadius)
                             .attr('y', -circleRadius)
-                            .attr('width', circleRadius * 1.4)
-                            .attr('height', circleRadius * 1.4)
+                            .attr('width', circleRadius * 1.5)
+                            .attr('height', circleRadius * 1.5)
                             .attr('fill', "none")
                             .attr('stroke', getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
                             .attr('stroke-width', 2);
                     } else if (d.feature === "spatial") {
                         d3.select(this).append('polygon')
                             .attr('class', 'triangle')
-                            .attr('points', `${-circleRadius / 1.4},${circleRadius / 1.4} ${circleRadius / 1.4},${circleRadius / 1.4} 0,${-circleRadius * 1}`)
+                            .attr('points', `${-circleRadius / 1.5},${circleRadius / 1.5} ${circleRadius / 1.5},${circleRadius / 1.5} 0,${-circleRadius * 1}`)
                             .attr('fill', "none")
                             .attr('stroke', getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
                             .attr('stroke-width', 2);
@@ -171,6 +172,42 @@ export const parityPlot = (selection, props) => {
                             .attr('stroke', "none")
                             .attr('stroke-width', 2);
                     }
+                }
+            }
+        });
+
+
+    var labels = g.merge(gEnter)
+        .selectAll('.label')
+        .data(r2Data, d => d.id);
+
+    labels.exit().remove();
+    // Get set of all features in r2 data
+    var features = new Set(r2Data.map(d => d.feature));
+    let chosenFeature;
+    if (features.has("spatial")) {
+        chosenFeature = "spatial";
+    } else if (features.has("topo")) {
+        chosenFeature = "topo";
+    } else {
+        chosenFeature = "naive";
+    }
+
+
+    // Add text elements for the lines of text
+    labels.enter().append('g')
+        .attr('class', '.label')
+        .merge(labels)
+        .each(function (d) {
+            if (d.timepoint === time) {
+                if (d.feature === chosenFeature) {
+                    d3.select(this).append('text')
+                        .attr('class', 'label')
+                        .attr('x', 20)
+                        .attr('y', d => d.set === "TRAIN" ? 40 : 80)
+                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                        .style("font-size", "40px")
+                        .text(d => d.set === "TRAIN" ? `Train R²: ${d['R^2'].toFixed(2)}` : `Test R²: ${d['R^2'].toFixed(2)}`);
                 }
             }
         });

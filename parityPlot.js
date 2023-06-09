@@ -5,7 +5,7 @@ import {
 import { dropDownMenu } from './dropdown.js';
 import { checkBox } from './checkbox.js';
 import { parityPlot } from './plotting.js';
-import { loadParityData } from './csvLoader.js';
+import { loadParityData, loadR2Data } from './csvLoader.js';
 
 const svg = select('svg');
 
@@ -22,6 +22,7 @@ let showYAxis = true;
 let showInitial = false;
 
 let rawData;
+let r2Data;
 
 let context = "C";
 let contexts = ["C", "CH"];
@@ -33,6 +34,7 @@ let time = "0";
 let times = ["0", "8", "15"];
 
 let dataPath = "data/predicted/parity_formatted_r2.csv"
+let dataPathR2 = "data/predicted/temporal_r2.csv"
 
 const saveButtonId = 'saveButton';
 
@@ -184,6 +186,7 @@ const render = () => {
     };
 
     let filteredData = filterData(rawData);
+    let filteredDataR2 = filterData(r2Data);
 
     // Plot
     const margin = { top: 60, right: 40, bottom: 88, left: 150 }
@@ -197,6 +200,7 @@ const render = () => {
         innerWidth: innerWidth,
         innerHeight: innerHeight,
         data: filteredData,
+        r2Data: filteredDataR2,
         showXAxis: showXAxis,
         showYAxis: showYAxis,
         time: parseInt(time),
@@ -209,7 +213,13 @@ const render = () => {
 const dataPromise = loadParityData(dataPath).then(newData => {
     rawData = newData;
 });
-Promise.all([dataPromise]).then(() => { render(); });
+
+const dataPromise2 = loadR2Data(dataPathR2).then(newData => {
+    r2Data = newData;
+});
+
+Promise.all([dataPromise, dataPromise2]).then(() => { render(); });
+
 
 
 const onResponseClicked = resp => {

@@ -68,3 +68,19 @@ export const loadTemporalData = (data_path) => {
         return data;
     })
 };
+
+export const loadR2Data = (data_path) => {
+    return csv(data_path).then(loadedData => {
+        const data = loadedData;
+        data.forEach(d => {
+            d["R^2"] = +d["R^2"];
+            d["timepoint"] = +d["timepoint"];
+            d["set"] = d["set"];
+            d["model"] = d["model"];
+            d["context"] = d["context"];
+            d["response"] = d["response"];
+            d["feature"] = d["feature"];
+        });
+        return data;
+    })
+};
