@@ -182,6 +182,7 @@ export const parityPlot = (selection, props) => {
         .data(r2Data, d => d.id);
 
     labels.exit().remove();
+
     // Get set of all features in r2 data
     var features = new Set(r2Data.map(d => d.feature));
     let chosenFeature;
@@ -193,21 +194,47 @@ export const parityPlot = (selection, props) => {
         chosenFeature = "naive";
     }
 
-
     // Add text elements for the lines of text
     labels.enter().append('g')
         .attr('class', '.label')
         .merge(labels)
         .each(function (d) {
+            let length;
+            if (d["R^2"] >= 0) {
+                length = 80;
+            } else {
+                length = 90;
+            }
             if (d.timepoint === time) {
                 if (d.feature === chosenFeature) {
                     d3.select(this).append('text')
                         .attr('class', 'label')
                         .attr('x', 20)
                         .attr('y', d => d.set === "TRAIN" ? 40 : 80)
-                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
                         .style("font-size", "40px")
-                        .text(d => d.set === "TRAIN" ? `Train R²: ${d['R^2'].toFixed(2)}` : `Test R²: ${d['R^2'].toFixed(2)}`);
+                        .text(d => d.set === "TRAIN" ? `R²: ` : `Q²: `);
+
+                    d3.select(this).append('text')
+                        .attr('x', 83)
+                        .attr('y', d => d.set === "TRAIN" ? 40 : 80)
+                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                        .text(d => d['R^2'].toFixed(2))
+                        .style("font-size", "40px");
+
+                } else {
+                    d3.select(this).append('text')
+                        .attr('class', 'label')
+                        .attr('x', 83 + length)
+                        .attr('y', d => d.set === "TRAIN" ? 40 : 80)
+                        .style("font-size", "40px")
+                        .text(",");
+
+                    d3.select(this).append('text')
+                        .attr('x', 99 + length)
+                        .attr('y', d => d.set === "TRAIN" ? 40 : 80)
+                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                        .text(d => d['R^2'].toFixed(2))
+                        .style("font-size", "40px");
                 }
             }
         });
@@ -378,9 +405,9 @@ export const barPlot = (selection, props) => {
 
 
                 // Graph the bars using the values
-                const gapBetweenBars = 0;
-                const gapBetweenSets = 0.05 * xScale.bandwidth();
-                const barWidth = (xScale.bandwidth() - gapBetweenBars) / 7;
+                const gapBetweenBars = 0.025 * xScale.bandwidth();
+                const gapBetweenSets = 0.055 * xScale.bandwidth();
+                const barWidth = (xScale.bandwidth() - gapBetweenBars) / 7.5;
 
                 const xNaiveTrain = xScale(response.key) + i * (barWidth + gapBetweenBars);
                 const xNaiveTest = xNaiveTrain + barWidth + gapBetweenBars;
@@ -445,7 +472,9 @@ export const barPlot = (selection, props) => {
                     .attr("y", naive_test)
                     .attr("width", barWidth)
                     .attr("height", height4)
-                    .attr("fill", getColor(context + "-naive-TEST"));
+                    .attr("fill", getColor(context + "-naive-TEST"))
+                    .attr("stroke", getColor(context + "-naive-TEST"))
+                    .attr("stroke-width", 5);
 
                 d3.select(this)
                     .append("rect")
@@ -454,7 +483,9 @@ export const barPlot = (selection, props) => {
                     .attr("y", topo_test)
                     .attr("width", barWidth)
                     .attr("height", height5)
-                    .attr("fill", getColor(context + "-topo-TEST"));
+                    .attr("fill", getColor(context + "-topo-TEST"))
+                    .attr("stroke", getColor(context + "-topo-TEST"))
+                    .attr("stroke-width", 5);
 
                 d3.select(this)
                     .append("rect")
@@ -463,10 +494,24 @@ export const barPlot = (selection, props) => {
                     .attr("y", spatial_test)
                     .attr("width", barWidth)
                     .attr("height", height6)
-                    .attr("fill", getColor(context + "-spatial-TEST"));
+                    .attr("fill", getColor(context + "-spatial-TEST"))
+                    .attr("stroke", getColor(context + "-spatial-TEST"))
+                    .attr("stroke-width", 5);
 
                 // Plot se error bars
-                const errorWidth = 2
+                const errorWidth = 2;
+                const errorCapLength = 10; // Adjust the cap length as needed
+
+                // Function to draw error caps
+                function drawErrorCap(selection, x, y, width) {
+                    selection.append("line")
+                        .attr("class", "error-cap")
+                        .attr("x1", x - width / 2 + 1)
+                        .attr("y1", y)
+                        .attr("x2", x + width / 2 + 1)
+                        .attr("y2", y)
+                        .attr("stroke", "black");
+                }
 
                 const naive_train_se_height = Math.abs(yScale(naive_train_se) - yScale(0));
                 const naive_train_se_y = naive_train >= yScale(0) ? yScale(Math.max(0, naive_train_se)) + height1 + (naive_train_se_height / 2) - 2
@@ -508,6 +553,17 @@ export const barPlot = (selection, props) => {
                     .attr("height", spatial_train_se_height * 2)
                     .attr("fill", "black");
 
+
+                drawErrorCap(d3.select(this), xNaiveTrain + barWidth / 2, naive_train_se_y, errorCapLength);
+                drawErrorCap(d3.select(this), xNaiveTrain + barWidth / 2, naive_train_se_y + naive_train_se_height * 2, errorCapLength);
+
+                drawErrorCap(d3.select(this), xTopoTrain + barWidth / 2, topo_train_se_y, errorCapLength);
+                drawErrorCap(d3.select(this), xTopoTrain + barWidth / 2, topo_train_se_y + topo_train_se_height * 2, errorCapLength);
+
+                drawErrorCap(d3.select(this), xSpatialTrain + barWidth / 2, spatial_train_se_y, errorCapLength);
+                drawErrorCap(d3.select(this), xSpatialTrain + barWidth / 2, spatial_train_se_y + spatial_train_se_height * 2, errorCapLength);
+
+
                 const naive_test_se_height = Math.abs(yScale(naive_test_se) - yScale(0));
                 const naive_test_se_y = naive_test >= yScale(0) ? yScale(Math.max(0, naive_test_se)) + height4 + (naive_test_se_height / 2) - 2
                     : yScale(Math.max(0, naive_test_se)) - height4 + (naive_test_se_height / 2) - 2;
@@ -546,13 +602,22 @@ export const barPlot = (selection, props) => {
                     .attr("width", errorWidth)
                     .attr("height", spatial_test_se_height * 2)
                     .attr("fill", "black");
+
+                drawErrorCap(d3.select(this), xNaiveTest + barWidth / 2, naive_test_se_y, errorCapLength);
+                drawErrorCap(d3.select(this), xNaiveTest + barWidth / 2, naive_test_se_y + naive_test_se_height * 2, errorCapLength);
+
+                drawErrorCap(d3.select(this), xTopoTest + barWidth / 2, topo_test_se_y, errorCapLength);
+                drawErrorCap(d3.select(this), xTopoTest + barWidth / 2, topo_test_se_y + topo_test_se_height * 2, errorCapLength);
+
+                drawErrorCap(d3.select(this), xSpatialTest + barWidth / 2, spatial_test_se_y, errorCapLength);
+                drawErrorCap(d3.select(this), xSpatialTest + barWidth / 2, spatial_test_se_y + spatial_test_se_height * 2, errorCapLength);
             }
         });
 
     let yAxis;
     if (showYAxis) {
         yAxis = d3.axisLeft(yScale)
-            .tickValues([0.0, 0.5, 1.0])
+            .tickValues([-0.1, 0.0, 0.5, 1.0])
             .tickSize(0)
             .tickPadding(10);
     } else {
@@ -645,36 +710,18 @@ export const linePlot = (selection, props) => {
         const testR2s = Array.isArray(d.test_r2s) ? d.test_r2s : JSON.parse(d.test_r2s);
         const set = "TEST";
         const feature = d.feature;
+        const context = d.context;
         return testR2s
             .filter(testR2 => testR2 >= -0.1)
-            .map(testR2 => ({ x, y: testR2, set, feature }))
-    });
-
-    const trainPointsData = sortedData.flatMap(d => {
-        const x = xValue(d);
-        const trainR2s = Array.isArray(d.train_r2s) ? d.train_r2s : JSON.parse(d.train_r2s);
-        const set = "TRAIN";
-        const feature = d.feature;
-        const context = d.context;
-        return trainR2s
-            .filter(trainR2 => trainR2 >= -0.1)
-            .map(trainR2 => ({ x, y: trainR2, set, feature, context }))
+            .map(testR2 => ({ x, y: testR2, set, feature, context }))
     });
 
     const testPoints = g.merge(gEnter)
         .selectAll('.point')
         .data(testPointsData);
 
-    const trainPoints = g.merge(gEnter)
-        .selectAll('.point')
-        .data(trainPointsData);
-
     testPoints.exit().remove();
-    trainPoints.exit().remove();
 
-
-
-    console.log(data)
     if (type === "temporal") {
         testPoints.enter().append('path')
             .attr('class', 'point')
@@ -682,7 +729,7 @@ export const linePlot = (selection, props) => {
             .attr('d', circleGenerator)
             .attr('transform', d => `translate(${xScale(d.x)},${yScale(d.y)})`)
             .attr('fill', 'none')
-            .attr('stroke', d => d.context === "C" ? d => getColor("C-" + d.feature + "-" + d.set) : d => getColor("C-naive-" + d.set))
+            .attr('stroke', d => d.context === "C" ? getColor("C-topo-TEST") : getColor("C-naive-TEST"))
             .attr('stroke-width', 1);
     } else {
         testPoints.enter().append('path')
@@ -691,7 +738,7 @@ export const linePlot = (selection, props) => {
             .attr('d', circleGenerator)
             .attr('transform', d => `translate(${xScale(d.x)},${yScale(d.y)})`)
             .attr('fill', 'none')
-            .attr('stroke', d => getColor("C-" + d.feature + "-" + d.set))
+            .attr('stroke', d => getColor("C-" + d.feature + "-TEST"))
             .attr('stroke-width', 1);
     }
 
@@ -723,13 +770,9 @@ export const linePlot = (selection, props) => {
         )
     );
 
-    console.log(linesData)
-
     const lines = g.merge(gEnter)
         .selectAll('.line')
         .data(linesData, d => d.key);
-
-    console.log(lines)
 
     lines.exit().remove();
 
@@ -781,7 +824,7 @@ export const linePlot = (selection, props) => {
     let yAxis;
     if (showYAxis) {
         yAxis = axisLeft(yScale)
-            .tickValues([0.0, 0.5, 1.0])
+            .tickValues([-0.1, 0.0, 0.5, 1.0])
             .tickFormat(d3.format(".1f"))
             .tickSize(3)
             .tickPadding(10);
@@ -802,7 +845,8 @@ export const linePlot = (selection, props) => {
     yAxisG
         .merge(yAxisGEnter)
         .call(yAxis)
-        .attr("font-size", "50px");
+        .attr("font-size", "50px")
+        .selectAll(".tick line").remove();
 
     const xAxisG = g.select('.x-axis');
     const xAxisGEnter = gEnter
@@ -818,15 +862,15 @@ export const linePlot = (selection, props) => {
 
 const getColor = key => {
     const colorMap = {
-        "C-naive-TEST": "#000000",
-        "CH-naive-TEST": "#000000", // dark gray
+        "C-naive-TEST": "#606060",
+        "CH-naive-TEST": "#606060", // dark gray
         "C-topo-TEST": "#4098b5", // 
         "CH-topo-TEST": "#4098b5", // dark blue
         "C-spatial-TEST": "#FF6F00", // 
         "CH-spatial-TEST": "#FF6F00", // dark orange
 
-        "C-naive-TRAIN": "#909090", // light gray
-        "CH-naive-TRAIN": "#808080", //
+        "C-naive-TRAIN": "#AAAAAA", // light gray
+        "CH-naive-TRAIN": "#AAAAAA", //
         "C-topo-TRAIN": "#4cb6da", // light blue
         "CH-topo-TRAIN": "#4cb6da", // 
         "C-spatial-TRAIN": "#FF7F00", // light orange
