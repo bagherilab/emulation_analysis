@@ -23,7 +23,6 @@ let rawData;
 
 let context = "C";
 let contexts = ["C", "CH"];
-let feature = "topo";
 let response = "ACTIVITY";
 let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 let model = "MLR";
@@ -55,7 +54,14 @@ const render = () => {
 
             // Create a URL for the Blob object
             const url = URL.createObjectURL(blob);
-
+            let feature;
+            if (showSData) {
+                feature = "spatial";
+            } else if (showHEData) {
+                feature = "topo";
+            } else {
+                feature = "naive"
+            }
             // Create a new link element
             const link = document.createElement('a');
             link.download = "quant_plot_" + response + "_(" + feature + ")_" + model + ".svg";

@@ -199,42 +199,37 @@ export const parityPlot = (selection, props) => {
         .attr('class', '.label')
         .merge(labels)
         .each(function (d) {
-            let length;
-            if (d["R^2"] >= 0) {
-                length = 80;
-            } else {
-                length = 90;
-            }
             if (d.timepoint === time) {
+
                 if (d.feature === chosenFeature) {
                     d3.select(this).append('text')
                         .attr('class', 'label')
-                        .attr('x', 20)
-                        .attr('y', d => d.set === "TRAIN" ? 40 : 80)
-                        .style("font-size", "40px")
+                        .attr('x', 10)
+                        .attr('y', d => d.set === "TRAIN" ? 20 : 75)
+                        .style("font-size", "50px")
                         .text(d => d.set === "TRAIN" ? `R²: ` : `Q²: `);
 
                     d3.select(this).append('text')
-                        .attr('x', 83)
-                        .attr('y', d => d.set === "TRAIN" ? 40 : 80)
-                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                        .attr('x', 80)
+                        .attr('y', d => d.set === "TRAIN" ? 20 : 75)
+                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-TEST"))
                         .text(d => d['R^2'].toFixed(2))
-                        .style("font-size", "40px");
+                        .style("font-size", "50px");
 
                 } else {
-                    d3.select(this).append('text')
-                        .attr('class', 'label')
-                        .attr('x', 83 + length)
-                        .attr('y', d => d.set === "TRAIN" ? 40 : 80)
-                        .style("font-size", "40px")
-                        .text(",");
+                    // d3.select(this).append('text')
+                    //     .attr('class', 'label')
+                    //     .attr('x', 180)
+                    //     .attr('y', d => d.set === "TRAIN" ? 20 : 75)
+                    //     .style("font-size", "50px")
+                    //     .text(",");
 
                     d3.select(this).append('text')
-                        .attr('x', 99 + length)
-                        .attr('y', d => d.set === "TRAIN" ? 40 : 80)
-                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                        .attr('x', 200)
+                        .attr('y', d => d.set === "TRAIN" ? 20 : 75)
+                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-TEST"))
                         .text(d => d['R^2'].toFixed(2))
-                        .style("font-size", "40px");
+                        .style("font-size", "50px");
                 }
             }
         });

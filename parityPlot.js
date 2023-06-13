@@ -61,6 +61,14 @@ const render = () => {
 
             // Create a new link element
             const link = document.createElement('a');
+            let feature;
+            if (showSData) {
+                feature = "spatial";
+            } else if (showHEData) {
+                feature = "topo";
+            } else {
+                feature = "naive"
+            }
             link.download = "parity_plot_" + response + "_(" + feature + "_" + time + ")_" + model + ".svg";
             link.href = url;
 
@@ -195,7 +203,7 @@ const render = () => {
     svg.call(parityPlot, {
         xValue: d => d["y_pred"],
         yValue: d => d["y_true"],
-        circleRadius: 5,
+        circleRadius: 6,
         margin: { top: 60, right: 40, bottom: 88, left: 150 },
         innerWidth: innerWidth,
         innerHeight: innerHeight,
