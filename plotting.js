@@ -177,62 +177,62 @@ export const parityPlot = (selection, props) => {
         });
 
 
-    var labels = g.merge(gEnter)
-        .selectAll('.label')
-        .data(r2Data, d => d.id);
+    // var labels = g.merge(gEnter)
+    //     .selectAll('.label')
+    //     .data(r2Data, d => d.id);
 
-    labels.exit().remove();
+    // labels.exit().remove();
 
-    // Get set of all features in r2 data
-    var features = new Set(r2Data.map(d => d.feature));
-    let chosenFeature;
-    if (features.has("spatial")) {
-        chosenFeature = "spatial";
-    } else if (features.has("topo")) {
-        chosenFeature = "topo";
-    } else {
-        chosenFeature = "naive";
-    }
+    // // Get set of all features in r2 data
+    // var features = new Set(r2Data.map(d => d.feature));
+    // let chosenFeature;
+    // if (features.has("spatial")) {
+    //     chosenFeature = "spatial";
+    // } else if (features.has("topo")) {
+    //     chosenFeature = "topo";
+    // } else {
+    //     chosenFeature = "naive";
+    // }
 
-    // Add text elements for the lines of text
-    labels.enter().append('g')
-        .attr('class', '.label')
-        .merge(labels)
-        .each(function (d) {
-            if (d.timepoint === time) {
+    // // Add text elements for the lines of text
+    // labels.enter().append('g')
+    //     .attr('class', '.label')
+    //     .merge(labels)
+    //     .each(function (d) {
+    //         if (d.timepoint === time) {
 
-                if (d.feature === chosenFeature) {
-                    d3.select(this).append('text')
-                        .attr('class', 'label')
-                        .attr('x', 10)
-                        .attr('y', d => d.set === "TRAIN" ? 20 : 75)
-                        .style("font-size", "50px")
-                        .text(d => d.set === "TRAIN" ? `R²: ` : `Q²: `);
+    //             if (d.feature === chosenFeature) {
+    //                 d3.select(this).append('text')
+    //                     .attr('class', 'label')
+    //                     .attr('x', 10)
+    //                     .attr('y', d => d.set === "TRAIN" ? 20 : 75)
+    //                     .style("font-size", "50px")
+    //                     .text(d => d.set === "TRAIN" ? `R²: ` : `Q²: `);
 
-                    d3.select(this).append('text')
-                        .attr('x', 80)
-                        .attr('y', d => d.set === "TRAIN" ? 20 : 75)
-                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-TEST"))
-                        .text(d => d['R^2'].toFixed(2))
-                        .style("font-size", "50px");
+    //                 d3.select(this).append('text')
+    //                     .attr('x', 80)
+    //                     .attr('y', d => d.set === "TRAIN" ? 20 : 75)
+    //                     .attr('fill', d => getColor(d.context + "-" + d.feature + "-TEST"))
+    //                     .text(d => d['R^2'].toFixed(2))
+    //                     .style("font-size", "50px");
 
-                } else {
-                    // d3.select(this).append('text')
-                    //     .attr('class', 'label')
-                    //     .attr('x', 180)
-                    //     .attr('y', d => d.set === "TRAIN" ? 20 : 75)
-                    //     .style("font-size", "50px")
-                    //     .text(",");
+    //             } else {
+    //                 // d3.select(this).append('text')
+    //                 //     .attr('class', 'label')
+    //                 //     .attr('x', 180)
+    //                 //     .attr('y', d => d.set === "TRAIN" ? 20 : 75)
+    //                 //     .style("font-size", "50px")
+    //                 //     .text(",");
 
-                    d3.select(this).append('text')
-                        .attr('x', 200)
-                        .attr('y', d => d.set === "TRAIN" ? 20 : 75)
-                        .attr('fill', d => getColor(d.context + "-" + d.feature + "-TEST"))
-                        .text(d => d['R^2'].toFixed(2))
-                        .style("font-size", "50px");
-                }
-            }
-        });
+    //                 d3.select(this).append('text')
+    //                     .attr('x', 200)
+    //                     .attr('y', d => d.set === "TRAIN" ? 20 : 75)
+    //                     .attr('fill', d => getColor(d.context + "-" + d.feature + "-TEST"))
+    //                     .text(d => d['R^2'].toFixed(2))
+    //                     .style("font-size", "50px");
+    //             }
+    //         }
+    //     });
 
     let xAxis;
     if (showXAxis) {

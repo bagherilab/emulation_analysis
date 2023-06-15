@@ -316,12 +316,6 @@ def format_floats():
     data.to_csv(formatted_path, index=False)
 
 
-def remove_50_obs():
-    data = pd.read_csv(formatted_path)
-    data = data[data["num_observations"] != 50]
-    data.to_csv("data/predicted/transformed_quant_se_50.csv", index=False)
-
-
 features = ["naive", "topo", "spatial"]
 responses = ["ACTIVITY", "GROWTH", "SYMMETRY"]
 timepoints = [0, 8, 15]
@@ -426,6 +420,5 @@ if __name__ == "__main__":
     # combine_bar_plots_r_sqaures()
     # explode_ci()
     # format_floats()
-    # remove_50_obs()
     # parity_plot_data()
     # format_parity()
