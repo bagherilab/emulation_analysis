@@ -268,8 +268,8 @@ def combine_quantity_r_squares():
                 )
 
 
-ci_path = "data/predicted/quant.csv"
-formatted_path = "data/predicted/transformed_quant.csv"
+ci_path = "data/predicted/temporal.csv"
+formatted_path = "data/predicted/temporal.csv"
 
 
 def explode_ci():
@@ -279,41 +279,32 @@ def explode_ci():
     test_data = data.copy()
     test_data["set"] = "TEST"
 
-    train_data.rename(columns={"train_mean": "R^2"}, inplace=True)
-    train_ci = train_data["train_se"]
-    # ci_values = train_ci.str.strip("[]")
-    # ci_values = ci_values.str.split(r"\s+")
+    train_data["r2_mean"] = train_data["train_r2_mean"]
+    train_data["r2_se_lower"] = train_data["train_r2_mean"] - train_data["train_r2_se"]
+    train_data["r2_se_upper"] = train_data["train_r2_mean"] + train_data["train_r2_se"]
+    test_data["r2_mean"] = test_data["test_r2_mean"]
+    test_data["r2_se_lower"] = test_data["test_r2_mean"] - test_data["test_r2_se"]
+    test_data["r2_se_upper"] = test_data["test_r2_mean"] + test_data["test_r2_se"]
 
-    train_data["se_lower"] = train_data["R^2"] - train_ci
-    train_data["se_upper"] = train_data["R^2"] + train_ci
-
-    test_data.rename(columns={"test_mean": "R^2"}, inplace=True)
-    test_ci = test_data["test_se"]
-    # ci_values = test_ci.str.strip("[]")
-    # ci_values = ci_values.str.split(r"\s+")
-
-    test_data["se_lower"] = test_data["R^2"] - test_ci
-    test_data["se_upper"] = test_data["R^2"] + test_ci
+    train_data["rmse_mean"] = train_data["train_rmse_mean"]
+    train_data["rmse_se_lower"] = train_data["train_rmse_mean"] - train_data["train_rmse_se"]
+    train_data["rmse_se_upper"] = train_data["train_rmse_mean"] + train_data["train_rmse_se"]
+    test_data["rmse_mean"] = test_data["test_rmse_mean"]
+    test_data["rmse_se_lower"] = test_data["test_rmse_mean"] - test_data["test_rmse_se"]
+    test_data["rmse_se_upper"] = test_data["test_rmse_mean"] + test_data["test_rmse_se"]
 
     # Concatenate train and test dataframes
     new_data = pd.concat([train_data, test_data], ignore_index=True)
 
-    new_data.drop(columns=["train_mean", "test_mean"], inplace=True)
-    new_data.drop(columns=["train_se", "test_se"], inplace=True)
+    new_data.drop(
+        columns=["train_r2_mean", "test_r2_mean", "train_rmse_mean", "test_rmse_mean"], inplace=True
+    )
+    new_data.drop(
+        columns=["train_r2_se", "test_r2_se", "train_rmse_se", "test_rmse_se"], inplace=True
+    )
 
     # Save the transformed data to a new CSV file
     new_data.to_csv(formatted_path, index=False)
-
-
-def format_floats():
-    data = pd.read_csv(formatted_path)
-    data["ci_lower"] = data["ci_lower"].astype(float)
-    data["ci_upper"] = data["ci_upper"].astype(float)
-
-    data["ci_lower"] = data["ci_lower"].map("{:.10f}".format)
-    data["ci_upper"] = data["ci_upper"].map("{:.10f}".format)
-
-    data.to_csv(formatted_path, index=False)
 
 
 features = ["naive", "topo", "spatial"]
@@ -416,9 +407,9 @@ def format_parity():
 
 
 if __name__ == "__main__":
-    combine_model_csvs()
+    # combine_model_csvs()
     # combine_bar_plots_r_sqaures()
-    # explode_ci()
+    explode_ci()
     # format_floats()
     # parity_plot_data()
     # format_parity()

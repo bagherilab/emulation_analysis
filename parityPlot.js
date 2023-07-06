@@ -215,6 +215,16 @@ const render = () => {
         showInitial: showInitial,
     });
 
+    svg.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", innerWidth)
+        .attr("height", innerHeight)
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", "1px");
+
 };
 
 // Load data

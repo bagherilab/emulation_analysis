@@ -1,3 +1,4 @@
+// import { sort } from 'https://unpkg.com/d3@5.6.0/dist/d3.min.js';
 import {
     select,
     csv,
@@ -38,12 +39,12 @@ export const parityPlot = (selection, props) => {
     const extentXY = [Math.min(extentX[0], extentY[0]), Math.max(extentX[1], extentY[1])];
 
     const xScale = scaleLinear()
-        .domain(extentXY)
+        .domain([-0.65, 1.05])
         .range([0, innerWidth])
         .nice();
 
     const yScale = scaleLinear()
-        .domain(extentXY)
+        .domain([-0.65, 1.05])
         .range([innerHeight, 0])
         .nice();
 
@@ -307,20 +308,28 @@ export const barPlot = (selection, props) => {
         .range([0, innerWidth])
         .padding(0.1);
 
+    // R2 scale
     const yScale = d3
         .scaleLinear()
         .domain([-0.1, 1.1])
         .range([innerHeight, 0])
         .nice();
 
+    // RMSE scale
+    // const yScale = d3
+    //     .scaleLinear()
+    //     .domain([0, 0.6])
+    //     .range([innerHeight, 0])
+    //     .nice();
+
     const nestedData = d3.nest()
         .key(d => d.response)
         .key(d => d.feature)
         .key(d => d.set)
         .rollup(group => {
-            const meanR2 = d3.mean(group, d => d['R^2']);
-            const se = d3.mean(group, d => d["se"]);
-            return { meanR2, se };
+            const mean = d3.mean(group, d => d['r2']);
+            const se = d3.mean(group, d => d["r2_se"]);
+            return { mean, se };
         })
         .entries(data);
 
@@ -383,18 +392,18 @@ export const barPlot = (selection, props) => {
                 const spatial_test_values = spatial_sets[1].value;
                 const spatial_train_values = spatial_sets[0].value;
 
-                const naive_test_r2 = naive_test_values["meanR2"];
-                const naive_train_r2 = naive_train_values["meanR2"];
+                const naive_test_r2 = naive_test_values["mean"];
+                const naive_train_r2 = naive_train_values["mean"];
                 const naive_test_se = naive_test_values["se"];
                 const naive_train_se = naive_train_values["se"];
 
-                const topo_test_r2 = topo_test_values["meanR2"];
-                const topo_train_r2 = topo_train_values["meanR2"];
+                const topo_test_r2 = topo_test_values["mean"];
+                const topo_train_r2 = topo_train_values["mean"];
                 const topo_test_se = topo_test_values["se"];
                 const topo_train_se = topo_train_values["se"];
 
-                const spatial_test_r2 = spatial_test_values["meanR2"];
-                const spatial_train_r2 = spatial_train_values["meanR2"];
+                const spatial_test_r2 = spatial_test_values["mean"];
+                const spatial_train_r2 = spatial_train_values["mean"];
                 const spatial_test_se = spatial_test_values["se"];
                 const spatial_train_se = spatial_train_values["se"];
 
@@ -494,16 +503,16 @@ export const barPlot = (selection, props) => {
                     .attr("stroke-width", 5);
 
                 // Plot se error bars
-                const errorWidth = 2;
-                const errorCapLength = 10; // Adjust the cap length as needed
+                const errorWidth = 5;
+                const errorCapLength = 14; // Adjust the cap length as needed
 
                 // Function to draw error caps
                 function drawErrorCap(selection, x, y, width) {
                     selection.append("line")
                         .attr("class", "error-cap")
-                        .attr("x1", x - width / 2 + 1)
+                        .attr("x1", x - width / 2 + 2)
                         .attr("y1", y)
-                        .attr("x2", x + width / 2 + 1)
+                        .attr("x2", x + width / 2 + 2)
                         .attr("y2", y)
                         .attr("stroke", "black");
                 }
@@ -611,10 +620,17 @@ export const barPlot = (selection, props) => {
 
     let yAxis;
     if (showYAxis) {
+        // R2 ticks
         yAxis = d3.axisLeft(yScale)
             .tickValues([-0.1, 0.0, 0.5, 1.0])
             .tickSize(0)
             .tickPadding(10);
+
+        // RMSE ticks
+        // yAxis = d3.axisLeft(yScale)
+        //     .tickValues([0, 0.2, 0.4, 0.6])
+        //     .tickSize(0)
+        //     .tickPadding(10);
     } else {
         yAxis = d3.axisLeft(yScale)
             .tickValues([])
@@ -670,19 +686,27 @@ export const linePlot = (selection, props) => {
             .range([0, innerWidth]);
     }
 
-    const yScale = d3.scaleLinear()
-        .domain([-0.1, 1.1])
-        .range([innerHeight, 0]);
+    // R2 scale
+    // const yScale = d3.scaleLinear()
+    //     .domain([-0.1, 1.1])
+    //     .range([innerHeight, 0]);
 
-    const zeroLine = g.merge(gEnter)
-        .append("line")
-        .attr("class", "zero-line")
-        .attr("x1", 0)
-        .attr("x2", innerWidth)
-        .attr("y1", yScale(0))
-        .attr("y2", yScale(0))
-        .attr("stroke", "black")
-        .attr("stroke-width", 1);
+    // RMSE scale
+    const maxY = 0.45;
+    const yScale = d3.scaleLinear()
+        .domain([0.0, maxY])
+        .range([innerHeight, 0])
+        .nice();
+
+    // const zeroLine = g.merge(gEnter)
+    //     .append("line")
+    //     .attr("class", "zero-line")
+    //     .attr("x1", 0)
+    //     .attr("x2", innerWidth)
+    //     .attr("y1", yScale(0))
+    //     .attr("y2", yScale(0))
+    //     .attr("stroke", "black")
+    //     .attr("stroke-width", 1);
 
     // Clip path
     g.merge(gEnter)
@@ -702,13 +726,13 @@ export const linePlot = (selection, props) => {
 
     const testPointsData = sortedData.flatMap(d => {
         const x = xValue(d);
-        const testR2s = Array.isArray(d.test_r2s) ? d.test_r2s : JSON.parse(d.test_r2s);
+        const test_means = Array.isArray(d.test_rmses) ? d.test_rmses : JSON.parse(d.test_rmses);
         const set = "TEST";
         const feature = d.feature;
         const context = d.context;
-        return testR2s
-            .filter(testR2 => testR2 >= -0.1)
-            .map(testR2 => ({ x, y: testR2, set, feature, context }))
+        return test_means
+            .filter(test_mean => test_mean <= 0.4)
+            .map(test_mean => ({ x, y: test_mean, set, feature, context }))
     });
 
     const testPoints = g.merge(gEnter)
@@ -736,7 +760,6 @@ export const linePlot = (selection, props) => {
             .attr('stroke', d => getColor("C-" + d.feature + "-TEST"))
             .attr('stroke-width', 1);
     }
-
 
     // Line
     const lineGenerator = d3.line()
@@ -804,8 +827,10 @@ export const linePlot = (selection, props) => {
                 .tickPadding(10);
         } else if (type === "temporal") {
             xAxis = axisBottom(xScale)
-                .tickValues([-1, 2, 5, 8, 11, 14])
-                .tickFormat(d3.format(".0f"))
+                .tickValues([0, 7, 14])
+                .tickFormat(function (d) {
+                    return (d / 7).toFixed(0);
+                })
                 .tickSize(0)
                 .tickPadding(10);
         }
@@ -818,8 +843,21 @@ export const linePlot = (selection, props) => {
 
     let yAxis;
     if (showYAxis) {
+        // R2 ticks
+        // yAxis = axisLeft(yScale)
+        //     .tickValues([-0.1, 0.0, 0.5, 1.0])
+        //     .tickFormat(d3.format(".1f"))
+        //     .tickSize(3)
+        //     .tickPadding(10);
+
+        // RMSE ticks
+        // yAxis = axisLeft(yScale)
+        //     .tickValues([0.0, 0.2, 0.4])
+        //     .tickFormat(d3.format(".1f"))
+        //     .tickSize(3)
+        //     .tickPadding(10);
         yAxis = axisLeft(yScale)
-            .tickValues([-0.1, 0.0, 0.5, 1.0])
+            .tickValues([0.0, 0.1, 0.2, 0.3, 0.4])
             .tickFormat(d3.format(".1f"))
             .tickSize(3)
             .tickPadding(10);

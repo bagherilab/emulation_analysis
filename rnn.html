@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>RNN Plots</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/d3@5.6.0/dist/d3.min.js"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</head>
+
+<body>
+    <p>Previous page:</p>
+    <button onclick="goBack()">Go back</button>
+    <div id="menus">
+        Model:
+        <span id="model-menu"></span>
+    </div>
+
+    <div id="radio">
+        C:
+        <input type="radio" name="context" value="C" id="c-radio" checked>
+        CH:
+        <input type="radio" name="context" value="CH" id="ch-radio">
+    </div>
+
+    <div id="axes">
+        Y-axis:
+        <span id="y-check"></span>
+    </div>
+
+    <svg width="800" height="800"></svg>
+    <script type="module" src="rnnPlot.js"></script>
+</body>
+
+</html>

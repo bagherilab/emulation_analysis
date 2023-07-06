@@ -5,7 +5,7 @@ import {
 import { dropDownMenu } from './dropdown.js';
 import { checkBox } from './checkbox.js';
 import { barPlot } from './plotting.js';
-import { loadBarData } from './csvLoader.js';
+import { loadRNNData } from './csvLoader.js';
 
 const svg = select('svg');
 
@@ -16,11 +16,9 @@ let showYAxis = true;
 
 let rawData;
 
-let model = "MLR";
-let models = ["MLR", "RF", "SVR", "MLP"];
 let context = "C";
 
-let dataPath = "data/predicted/bar_r2_se.csv"
+let dataPath = "data/predicted/rnn_r2_se.csv"
 
 const saveButtonId = 'saveButton';
 
@@ -56,12 +54,6 @@ const render = () => {
         document.body.appendChild(saveButton);
     };
 
-    select("#model-menu")
-        .call(dropDownMenu, {
-            options: models,
-            onOptionClicked: onModelClicked
-        });
-
     select("#y-check")
         .call(checkBox, {
             checked: true,
@@ -73,11 +65,9 @@ const render = () => {
 
     const filterData = (dataset) => {
         const filteredDataset = dataset.filter((row) => {
-            let modelMatch = row["model"] === model;
             let contextMatch = row["context"] === context;
-            let timeMatch = parseInt(row["timepoint"]) === 0;
 
-            return modelMatch && contextMatch && timeMatch;
+            return contextMatch;
         });
 
         return filteredDataset;

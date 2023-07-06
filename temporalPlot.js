@@ -29,7 +29,7 @@ let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 let model = "MLR";
 let models = ["MLR", "RF", "SVR", "MLP"];
 
-let dataPath = "data/predicted/transformed_temporal.csv"
+let dataPath = "data/predicted/temporal.csv"
 
 const saveButtonId = 'saveButton';
 
@@ -164,7 +164,7 @@ const render = () => {
     const innerHeight = height - margin.top - margin.bottom;
     svg.call(linePlot, {
         xValue: d => d["timepoint"] - 1,
-        yValue: d => d["R^2"],
+        yValue: d => d["rmse_mean"],
         margin: margin,
         innerWidth: innerWidth,
         innerHeight: innerHeight,
@@ -173,6 +173,16 @@ const render = () => {
         showXAxis: showXAxis,
         showYAxis: showYAxis
     });
+
+    svg.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", innerWidth)
+        .attr("height", innerHeight)
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", "1px");
 };
 
 // Load data

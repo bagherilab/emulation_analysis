@@ -30,7 +30,7 @@ let models = ["MLR", "RF", "SVR", "MLP"];
 let time = "0";
 let times = ["0", "8", "15"];
 
-let dataPath = "data/predicted/transformed_quant.csv"
+let dataPath = "data/predicted/quant.csv"
 
 const saveButtonId = 'saveButton';
 
@@ -180,7 +180,7 @@ const render = () => {
     const innerHeight = height - margin.top - margin.bottom;
     svg.call(linePlot, {
         xValue: d => d["num_observations"],
-        yValue: d => d["R^2"],
+        yValue: d => d["rmse_mean"],
         margin: margin,
         innerWidth: innerWidth,
         innerHeight: innerHeight,
@@ -189,6 +189,16 @@ const render = () => {
         showXAxis: showXAxis,
         showYAxis: showYAxis
     });
+
+    svg.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", innerWidth)
+        .attr("height", innerHeight)
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .style("fill", "none")
+        .style("stroke", "black")
+        .style("stroke-width", "1px");
 
 };
 
