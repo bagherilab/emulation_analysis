@@ -22,6 +22,7 @@ export const parityPlot = (selection, props) => {
         showYAxis,
         time,
         showInitial,
+        showML,
     } = props;
 
     selection.selectAll('*').remove();
@@ -39,12 +40,12 @@ export const parityPlot = (selection, props) => {
     const extentXY = [Math.min(extentX[0], extentY[0]), Math.max(extentX[1], extentY[1])];
 
     const xScale = scaleLinear()
-        .domain([-0.65, 1.05])
+        .domain(extentXY)
         .range([0, innerWidth])
         .nice();
 
     const yScale = scaleLinear()
-        .domain([-0.65, 1.05])
+        .domain(extentXY)
         .range([innerHeight, 0])
         .nice();
 
@@ -102,6 +103,42 @@ export const parityPlot = (selection, props) => {
             });
     }
 
+    if (showML) {
+        markers.enter().append('g')
+            .attr('class', '.dot')
+            .merge(markers)
+            .attr('transform', d => `translate(${xScale(xValue(d))},${yScale(yValue(d))})`)
+            .each(function (d) {
+                if (d.emulator === "ml") {
+                    if (d.feature === "naive") {
+                        d3.select(this).append('circle')
+                            .attr('class', 'circle')
+                            .attr('r', circleRadius / 1.5)
+                            .attr('fill', d => d.set === "train" ? "none" : getColor("C-naive-TEST"))
+                            .attr('stroke', d => d.set === "train" ? getColor("C-naive-TRAIN") : "none")
+                            .attr('stroke-width', 2);
+                    } else if (d.feature === "topo") {
+                        d3.select(this).append('rect')
+                            .attr('class', 'square')
+                            .attr('x', -circleRadius)
+                            .attr('y', -circleRadius)
+                            .attr('width', circleRadius * 1.5)
+                            .attr('height', circleRadius * 1.5)
+                            .attr('fill', d => d.set === "train" ? "none" : getColor("C-naive-TEST"))
+                            .attr('stroke', d => d.set === "train" ? getColor("C-naive-TRAIN") : "none")
+                            .attr('stroke-width', d => d.set === "train" ? 2 : 0);
+                    } else if (d.feature === "spatial") {
+                        d3.select(this).append('polygon')
+                            .attr('class', 'triangle')
+                            .attr('points', `${-circleRadius / 1.5},${circleRadius / 1.5} ${circleRadius / 1.5},${circleRadius / 1.5} 0,${-circleRadius * 1}`)
+                            .attr('fill', d => d.set === "train" ? "none" : getColor("C-naive-TEST"))
+                            .attr('stroke', d => d.set === "train" ? getColor("C-naive-TRAIN") : "none")
+                            .attr('stroke-width', 2);
+                    }
+                }
+            });
+    }
+
 
     // Training points
     markers.enter().append('g')
@@ -109,7 +146,7 @@ export const parityPlot = (selection, props) => {
         .merge(markers)
         .attr('transform', d => `translate(${xScale(xValue(d))},${yScale(yValue(d))})`)
         .each(function (d) {
-            if (d.timepoint === time) {
+            if (d.emulator === "rnn") {
                 if (d.set === "train") {
                     if (d.feature === "naive") {
                         d3.select(this).append('circle')
@@ -135,6 +172,16 @@ export const parityPlot = (selection, props) => {
                             .attr('fill', "none")
                             .attr('stroke', getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
                             .attr('stroke-width', 2);
+                    } else if (d.feature === "syntopo") {
+                        d3.select(this).append('rect')
+                            .attr('class', 'square')
+                            .attr('x', -circleRadius)
+                            .attr('y', -circleRadius)
+                            .attr('width', circleRadius * 1.5)
+                            .attr('height', circleRadius * 1.5)
+                            .attr('fill', "none")
+                            .attr('stroke', getColor(d.context + "-topo-" + d.set.toUpperCase()))
+                            .attr('stroke-width', 2);
                     }
                 }
             }
@@ -146,7 +193,7 @@ export const parityPlot = (selection, props) => {
         .merge(markers)
         .attr('transform', d => `translate(${xScale(xValue(d))},${yScale(yValue(d))})`)
         .each(function (d) {
-            if (d.timepoint === time) {
+            if (d.emulator === "rnn") {
                 if (d.set === "test") {
                     if (d.feature === "naive") {
                         d3.select(this).append('circle')
@@ -170,6 +217,16 @@ export const parityPlot = (selection, props) => {
                             .attr('class', 'triangle')
                             .attr('points', `${-circleRadius},${circleRadius} ${circleRadius},${circleRadius} 0,${-circleRadius * 1.4}`)
                             .attr('fill', d => getColor(d.context + "-" + d.feature + "-" + d.set.toUpperCase()))
+                            .attr('stroke', "none")
+                            .attr('stroke-width', 2);
+                    } else if (d.feature === "syntopo") {
+                        d3.select(this).append('rect')
+                            .attr('class', 'square')
+                            .attr('x', -circleRadius)
+                            .attr('y', -circleRadius)
+                            .attr('width', circleRadius * 2)
+                            .attr('height', circleRadius * 2)
+                            .attr('fill', d => getColor(d.context + "-topo-" + d.set.toUpperCase()))
                             .attr('stroke', "none")
                             .attr('stroke-width', 2);
                     }
@@ -239,21 +296,23 @@ export const parityPlot = (selection, props) => {
     if (showXAxis) {
         xAxis = axisBottom(xScale)
             .ticks(3)
+            // .tickValues([0.2, 0.5, 0.8])
             .tickFormat(d3.format(".1f"))
-            .tickSize(3)
-            .tickPadding(15);
+            .tickSize(3);
+        // .tickPadding(15);
     } else {
         xAxis = axisBottom(xScale)
             .ticks(0)
             .tickFormat(d3.format(".1f"))
-            .tickSize(3)
-            .tickPadding(15);
+            .tickSize(3);
+        // .tickPadding(15);
     }
 
     let yAxis;
     if (showYAxis) {
         yAxis = axisLeft(yScale)
             .ticks(3)
+            // .tickValues([0.2, 0.5, 0.8])
             .tickFormat(d3.format(".1f"))
             .tickSize(3)
             .tickPadding(15);
@@ -311,7 +370,7 @@ export const barPlot = (selection, props) => {
     // R2 scale
     const yScale = d3
         .scaleLinear()
-        .domain([-0.1, 1.1])
+        .domain([-0.1, 1.0])
         .range([innerHeight, 0])
         .nice();
 
@@ -692,7 +751,7 @@ export const linePlot = (selection, props) => {
     //     .range([innerHeight, 0]);
 
     // RMSE scale
-    const maxY = 0.45;
+    const maxY = 0.12;
     const yScale = d3.scaleLinear()
         .domain([0.0, maxY])
         .range([innerHeight, 0])
@@ -821,7 +880,7 @@ export const linePlot = (selection, props) => {
     if (showXAxis) {
         if (type === "quantity") {
             xAxis = axisBottom(xScale)
-                .tickValues([100, 300, 500])
+                .tickValues([100, 250, 400])
                 .tickFormat(d3.format(".0f"))
                 .tickSize(0)
                 .tickPadding(10);
@@ -857,8 +916,8 @@ export const linePlot = (selection, props) => {
         //     .tickSize(3)
         //     .tickPadding(10);
         yAxis = axisLeft(yScale)
-            .tickValues([0.0, 0.1, 0.2, 0.3, 0.4])
-            .tickFormat(d3.format(".1f"))
+            .tickValues([0.0, 0.05, 0.1])
+            .tickFormat(d3.format(".2f"))
             .tickSize(3)
             .tickPadding(10);
     } else {
@@ -891,6 +950,291 @@ export const linePlot = (selection, props) => {
         .attr('transform', `translate(0,${innerHeight})`)
         .call(xAxis)
         .attr("font-size", "50px");
+};
+
+export const rnnBarPlot = (selection, props) => {
+    const {
+        data,
+        innerWidth,
+        innerHeight,
+        margin,
+        context,
+        showYAxis
+    } = props;
+
+    // Extract unique responses and features from the data
+    const responses = Array.from(new Set(data.map(d => d.response)));
+
+    // Define x and y scales
+    const xScale = d3
+        .scaleBand()
+        .domain(responses)
+        .range([0, innerWidth])
+        .padding(0.1);
+
+    // R2 scale
+    const yScale = d3
+        .scaleLinear()
+        .domain([-0.1, 1.0])
+        .range([innerHeight, 0])
+        .nice();
+
+    const nestedData = d3.nest()
+        .key(d => d.response)
+        .key(d => d.emulator)
+        .key(d => d.set)
+        .rollup(group => {
+            const mean = d3.mean(group, d => d['r2']);
+            const se = d3.mean(group, d => d["r2_se"]);
+            return { mean, se };
+        })
+        .entries(data);
+
+    selection.selectAll('*').remove();
+
+    const g = selection.selectAll('.container').data([null]);
+
+    const gEnter = g.enter().append('g')
+        .attr('class', 'container');
+    gEnter.merge(g)
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+
+    const zeroLine = g.merge(gEnter)
+        .append("line")
+        .attr("class", "zero-line")
+        .attr("x1", 0)
+        .attr("x2", innerWidth)
+        .attr("y1", yScale(0))
+        .attr("y2", yScale(0))
+        .attr("stroke", "black")
+        .attr("stroke-width", 1);
+
+    const bars = g.merge(gEnter)
+        .selectAll(".bar")
+        .data(nestedData);
+
+
+    bars.exit().remove();
+    zeroLine.exit().remove();
+
+    bars.enter()
+        .append("g")
+        .merge(bars)
+        .each(function (response) {
+            // Get features from response dictionary
+            const features = response.values;
+
+            // Iterate over features in pairs
+            for (let i = 0; i < features.length - 1; i += 2) {
+                // best rnn model
+                const feature1 = features.find(d => d.key === "rnn");
+                // best ml model
+                const feature2 = features.find(d => d.key === "ml");
+
+                // Get sets from feature dictionaries
+                const rnn_sets = feature1.values;
+                const ml_sets = feature2.values;
+
+                // Get values from sets dictionaries
+                const rnn_test_values = rnn_sets[1].value;
+                const rnn_train_values = rnn_sets[0].value;
+
+                const ml_test_values = ml_sets[1].value;
+                const ml_train_values = ml_sets[0].value;
+
+                const rnn_test_r2 = rnn_test_values["mean"];
+                const rnn_train_r2 = rnn_train_values["mean"];
+                const rnn_test_se = rnn_test_values["se"];
+                const rnn_train_se = rnn_train_values["se"];
+
+                const ml_test_r2 = ml_test_values["mean"];
+                const ml_train_r2 = ml_train_values["mean"];
+                const ml_test_se = ml_test_values["se"];
+                const ml_train_se = ml_train_values["se"];
+
+
+                // Graph the bars using the values
+                const gapBetweenBars = 0.02 * xScale.bandwidth();
+                const gapBetweenSets = 0.2 * xScale.bandwidth();
+                const barWidth = (xScale.bandwidth() - gapBetweenBars) / 7;
+
+                const xmlTrain = xScale(response.key) + xScale.bandwidth() * 0.1 + i * (barWidth + gapBetweenBars);
+                const xmlTest = xmlTrain + barWidth + gapBetweenBars;
+                const xrnnTrain = xmlTest + barWidth + gapBetweenSets;
+                const xrnnTest = xrnnTrain + barWidth + gapBetweenBars;
+
+                // Plot the training bars
+                const ml_train = yScale(Math.max(0, ml_train_r2));
+                const rnn_train = yScale(Math.max(0, rnn_train_r2));
+                const height1 = Math.abs(yScale(ml_train_r2) - yScale(0));
+                const height2 = Math.abs(yScale(rnn_train_r2) - yScale(0));
+
+                d3.select(this)
+                    .append("rect")
+                    .attr("class", "train-bar")
+                    .attr("x", xmlTrain)
+                    .attr("y", ml_train)
+                    .attr("width", barWidth)
+                    .attr("height", height1)
+                    .attr("fill", "none")
+                    .attr("stroke", getColor("C-topo-TRAIN"))
+                    .attr("stroke-width", 5);
+
+                d3.select(this)
+                    .append("rect")
+                    .attr("class", "train-bar")
+                    .attr("x", xrnnTrain)
+                    .attr("y", rnn_train)
+                    .attr("width", barWidth)
+                    .attr("height", height2)
+                    .attr("fill", "none")
+                    .attr("stroke", getColor("C-naive-TRAIN"))
+                    .attr("stroke-width", 5);
+
+                // Plot the test R^2 values on top of the bars
+                const ml_test = yScale(Math.max(0, ml_test_r2)); // Use Math.max to ensure positive values start at 0
+                const rnn_test = yScale(Math.max(0, rnn_test_r2)); // Use Math.max to ensure positive values start at 0
+                const height4 = Math.abs(yScale(ml_test_r2) - yScale(0)); // Calculate the height relative to 0
+                const height5 = Math.abs(yScale(rnn_test_r2) - yScale(0)); // Calculate the height relative to 0
+
+                d3.select(this)
+                    .append("rect")
+                    .attr("class", "test-r2")
+                    .attr("x", xmlTest)
+                    .attr("y", ml_test)
+                    .attr("width", barWidth)
+                    .attr("height", height4)
+                    .attr("fill", getColor(context + "-topo-TEST"))
+                    .attr("stroke", getColor(context + "-topo-TEST"))
+                    .attr("stroke-width", 5);
+
+                d3.select(this)
+                    .append("rect")
+                    .attr("class", "test-r2")
+                    .attr("x", xrnnTest)
+                    .attr("y", rnn_test)
+                    .attr("width", barWidth)
+                    .attr("height", height5)
+                    .attr("fill", getColor(context + "-naive-TEST"))
+                    .attr("stroke", getColor(context + "-naive-TEST"))
+                    .attr("stroke-width", 5);
+
+                // Plot se error bars
+                const errorWidth = 5;
+                const errorCapLength = 14; // Adjust the cap length as needed
+
+                // Function to draw error caps
+                function drawErrorCap(selection, x, y, width) {
+                    selection.append("line")
+                        .attr("class", "error-cap")
+                        .attr("x1", x - width / 2 + 2)
+                        .attr("y1", y)
+                        .attr("x2", x + width / 2 + 2)
+                        .attr("y2", y)
+                        .attr("stroke", "black");
+                }
+
+                const ml_train_se_height = Math.abs(yScale(ml_train_se) - yScale(0));
+                const ml_train_se_y = ml_train >= yScale(0) ? yScale(Math.max(0, ml_train_se)) + height1 + (ml_train_se_height / 2) - 2
+                    : yScale(Math.max(0, ml_train_se)) - height1 + (ml_train_se_height / 2) - 2;
+
+                const rnn_train_se_height = Math.abs(yScale(rnn_train_se) - yScale(0));
+                const rnn_train_se_y = rnn_train >= yScale(0) ? yScale(Math.max(0, rnn_train_se)) + height2 + (rnn_train_se_height / 2) - 2
+                    : yScale(Math.max(0, rnn_train_se)) - height2 + (rnn_train_se_height / 2) - 2;
+
+
+                d3.select(this)
+                    .append("rect")
+                    .attr("class", "train-se")
+                    .attr("x", xmlTrain + barWidth / 2)
+                    .attr("y", ml_train_se_y)
+                    .attr("width", errorWidth)
+                    .attr("height", ml_train_se_height * 2)
+                    .attr("fill", "black");
+
+                d3.select(this)
+                    .append("rect")
+                    .attr("class", "train-se")
+                    .attr("x", xrnnTrain + barWidth / 2)
+                    .attr("y", rnn_train_se_y)
+                    .attr("width", errorWidth)
+                    .attr("height", rnn_train_se_height * 2)
+                    .attr("fill", "black");
+
+
+                drawErrorCap(d3.select(this), xmlTrain + barWidth / 2, ml_train_se_y, errorCapLength);
+                drawErrorCap(d3.select(this), xmlTrain + barWidth / 2, ml_train_se_y + ml_train_se_height * 2, errorCapLength);
+
+                drawErrorCap(d3.select(this), xrnnTrain + barWidth / 2, rnn_train_se_y, errorCapLength);
+                drawErrorCap(d3.select(this), xrnnTrain + barWidth / 2, rnn_train_se_y + rnn_train_se_height * 2, errorCapLength);
+
+                const ml_test_se_height = Math.abs(yScale(ml_test_se) - yScale(0));
+                const ml_test_se_y = ml_test >= yScale(0) ? yScale(Math.max(0, ml_test_se)) + height4 + (ml_test_se_height / 2) - 2
+                    : yScale(Math.max(0, ml_test_se)) - height4 + (ml_test_se_height / 2) - 2;
+
+                const rnn_test_se_height = Math.abs(yScale(rnn_test_se) - yScale(0));
+                const rnn_test_se_y = rnn_test >= yScale(0) ? yScale(Math.max(0, rnn_test_se)) + height5 + (rnn_test_se_height / 2) - 2
+                    : yScale(Math.max(0, rnn_test_se)) - height5 + (rnn_test_se_height / 2) - 2;
+
+                d3.select(this)
+                    .append("rect")
+                    .attr("class", "test-se")
+                    .attr("x", xmlTest + barWidth / 2)
+                    .attr("y", ml_test_se_y)
+                    .attr("width", errorWidth)
+                    .attr("height", ml_test_se_height * 2)
+                    .attr("fill", "black");
+
+                d3.select(this)
+                    .append("rect")
+                    .attr("class", "test-se")
+                    .attr("x", xrnnTest + barWidth / 2)
+                    .attr("y", rnn_test_se_y)
+                    .attr("width", errorWidth)
+                    .attr("height", rnn_test_se_height * 2)
+                    .attr("fill", "black");
+
+                drawErrorCap(d3.select(this), xmlTest + barWidth / 2, ml_test_se_y, errorCapLength);
+                drawErrorCap(d3.select(this), xmlTest + barWidth / 2, ml_test_se_y + ml_test_se_height * 2, errorCapLength);
+
+                drawErrorCap(d3.select(this), xrnnTest + barWidth / 2, rnn_test_se_y, errorCapLength);
+                drawErrorCap(d3.select(this), xrnnTest + barWidth / 2, rnn_test_se_y + rnn_test_se_height * 2, errorCapLength);
+            }
+        });
+
+    let yAxis;
+    if (showYAxis) {
+        // R2 ticks
+        yAxis = d3.axisLeft(yScale)
+            .tickValues([-0.1, 0.0, 0.5, 1.0])
+            .tickSize(0)
+            .tickPadding(10);
+
+        // RMSE ticks
+        // yAxis = d3.axisLeft(yScale)
+        //     .tickValues([0, 0.2, 0.4, 0.6])
+        //     .tickSize(0)
+        //     .tickPadding(10);
+    } else {
+        yAxis = d3.axisLeft(yScale)
+            .tickValues([])
+            .tickSize(0)
+            .tickPadding(0);
+    }
+
+    const yAxisG = g.select('.y-axis');
+    const yAxisGEnter = gEnter
+        .append('g')
+        .attr("class", "y-axis")
+        .call(d3.axisLeft(yScale))
+        .attr("font-size", "50px");
+
+    yAxisG
+        .merge(yAxisGEnter)
+        .call(yAxis)
+        .selectAll('.tick line')
+        .remove();
 };
 
 const getColor = key => {

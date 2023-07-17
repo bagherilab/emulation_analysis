@@ -213,6 +213,7 @@ const render = () => {
         showYAxis: showYAxis,
         time: parseInt(time),
         showInitial: showInitial,
+        showML: false
     });
 
     svg.append("rect")

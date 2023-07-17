@@ -26,44 +26,46 @@ pred_data_path = "data/predicted/"
 
 def combine_model_csvs():
     for folder in os.listdir(pred_data_path):
-        if folder == "temporal" or folder == "quantity_experiments" or folder == ".DS_Store":
+        # if folder == "temporal" or folder == "quantity_experiments" or folder == ".DS_Store":
+        #     continue
+
+        if folder != "synthetic":
             continue
 
-        feature_dir = folder
-        for folder in os.listdir(os.path.join(pred_data_path, feature_dir)):
-            if folder == ".DS_Store":
-                continue
+        for feature_dir in os.listdir(os.path.join(pred_data_path, folder)):
+            for response_dir in os.listdir(os.path.join(pred_data_path, folder, feature_dir)):
+                if response_dir == ".DS_Store":
+                    continue
 
-            response_dir = folder
-            # Create an empty DataFrame to hold the combined data
-            combined_df = pd.DataFrame()
+                # Create an empty DataFrame to hold the combined data
+                combined_df = pd.DataFrame()
 
-            full_path = os.path.join(pred_data_path, feature_dir, response_dir)
-            for folder in os.listdir(full_path):
-                if os.path.isdir(os.path.join(full_path, folder)):
-                    # Loop through each file in the folder
-                    for file in os.listdir(os.path.join(full_path, folder)):
-                        # Check if the item in the folder is a CSV file
-                        if file.endswith(".PREDICTIONS.csv"):
-                            # Load the CSV file into a DataFrame
-                            df = pd.read_csv(os.path.join(full_path, folder, file))
+                full_path = os.path.join(pred_data_path, folder, feature_dir, response_dir)
+                for model_dir in os.listdir(full_path):
+                    if os.path.isdir(os.path.join(full_path, model_dir)):
+                        # Loop through each file in the folder
+                        for file in os.listdir(os.path.join(full_path, model_dir)):
+                            # Check if the item in the folder is a CSV file
+                            if file.endswith(".PREDICTIONS.csv"):
+                                # Load the CSV file into a DataFrame
+                                df = pd.read_csv(os.path.join(full_path, model_dir, file))
 
-                            if "set" in combined_df.columns and "set" in df.columns:
-                                df.drop("set", axis=1, inplace=True)
+                                if "set" in combined_df.columns and "set" in df.columns:
+                                    df.drop("set", axis=1, inplace=True)
 
-                            # Rename the y_pred column to the name of the folder
-                            df = df.rename(columns={"y_pred": folder})
+                                # Rename the y_pred column to the name of the folder
+                                df = df.rename(columns={"y_pred": model_dir})
 
-                            # Append the DataFrame to the combined DataFrame
-                            combined_df = pd.concat([combined_df, df], axis=1)
+                                # Append the DataFrame to the combined DataFrame
+                                combined_df = pd.concat([combined_df, df], axis=1)
 
-            # Drop any duplicate index columns
-            combined_df = combined_df.loc[:, ~combined_df.columns.duplicated()]
-            # Save the combined DataFrame to a CSV file in the MAIN folder
-            combined_df.to_csv(
-                os.path.join(full_path, "combined.csv"),
-                index=False,
-            )
+                # Drop any duplicate index columns
+                combined_df = combined_df.loc[:, ~combined_df.columns.duplicated()]
+                # Save the combined DataFrame to a CSV file in the MAIN folder
+                combined_df.to_csv(
+                    os.path.join(full_path, "combined.csv"),
+                    index=False,
+                )
 
 
 temporal_data_path = "data/predicted/temporal"
@@ -307,10 +309,11 @@ def explode_ci():
     new_data.to_csv(formatted_path, index=False)
 
 
-features = ["naive", "topo", "spatial"]
+features = ["syntopo"]
 responses = ["ACTIVITY", "GROWTH", "SYMMETRY"]
-timepoints = [0, 8, 15]
+timepoints = [0]
 contexts = ["C", "CH"]
+synthetic_path = "data/predicted/stored_results/synthetic/"
 
 
 def parity_plot_data():
@@ -319,21 +322,21 @@ def parity_plot_data():
         for response in responses:
             for time in timepoints:
                 pred_data_path_C = (
-                    "data/predicted/"
+                    synthetic_path
                     + feature
                     + "_"
                     + str(time)
-                    + "_metric_15_C/COUPLED-C-"
+                    + "_metric_15_C_0713/COUPLED-C-"
                     + response
                     + "/combined.csv"
                 )
 
                 true_data_path_C = (
-                    "data/predicted/"
+                    synthetic_path
                     + feature
                     + "_"
                     + str(time)
-                    + "_metric_15_C/COUPLED-C-"
+                    + "_metric_15_C_0713/COUPLED-C-"
                     + response
                     + "/test.csv"
                 )
@@ -346,24 +349,25 @@ def parity_plot_data():
                 pred_data_C["timepoint"] = time
                 pred_data_C["context"] = "C"
                 pred_data_C["y_true"] = C_data[response]
+                pred_data_C["emulator"] = "rnn"
                 pred_data_C.drop("Unnamed: 0", axis=1, inplace=True)
 
                 pred_data_path_CH = (
-                    "data/predicted/"
+                    synthetic_path
                     + feature
                     + "_"
                     + str(time)
-                    + "_metric_15_CH/COUPLED-CHX-"
+                    + "_metric_15_CH_0713/COUPLED-CHX-"
                     + response
                     + "/combined.csv"
                 )
 
                 true_data_path_CH = (
-                    "data/predicted/"
+                    synthetic_path
                     + feature
                     + "_"
                     + str(time)
-                    + "_metric_15_CH/COUPLED-CHX-"
+                    + "_metric_15_CH_0713/COUPLED-CHX-"
                     + response
                     + "/test.csv"
                 )
@@ -376,16 +380,17 @@ def parity_plot_data():
                 pred_data_CH["timepoint"] = time
                 pred_data_CH["context"] = "CH"
                 pred_data_CH["y_true"] = CH_data[response]
+                pred_data_CH["emulator"] = "rnn"
                 pred_data_CH.drop("Unnamed: 0", axis=1, inplace=True)
 
                 true_and_pred_combined = pd.concat([pred_data_C, pred_data_CH])
                 combined_data = pd.concat([combined_data, true_and_pred_combined])
 
-    combined_data.to_csv("data/predicted/parity_r2.csv", index=False)
+    combined_data.to_csv("data/predicted/rnn_parity.csv", index=False)
 
 
 def format_parity():
-    df = pd.read_csv("data/predicted/parity_r2.csv")
+    df = pd.read_csv("data/predicted/rnn_parity.csv")
     id_vars = [
         "context",
         "set",
@@ -393,23 +398,97 @@ def format_parity():
         "response",
         "timepoint",
         "y_true",
+        "emulator",
     ]
     value_vars = ["SVR", "MLR", "RF", "MLP"]
 
     # Reshape the dataframe
     melted_df = pd.melt(df, id_vars=id_vars, value_vars=value_vars, var_name="model")
 
+    melted_df = melted_df.dropna()
+
     # Reset the index
     melted_df = melted_df.reset_index(drop=True)
     melted_df.rename(columns={"value": "y_pred"}, inplace=True)
 
-    melted_df.to_csv("data/predicted/parity_formatted_r2.csv", index=False)
+    melted_df.to_csv("data/predicted/rnn_parity_formatted.csv", index=False)
+
+
+rnn_parity_file = "data/predicted/rnn_parity_formatted.csv"
+ml_parity_file = "data/predicted/parity_formatted_r2.csv"
+
+
+def combine_parity():
+    rnn_df = pd.read_csv(rnn_parity_file)
+    ml_df = pd.read_csv(ml_parity_file)
+
+    c_activity_rows = ml_df[
+        (ml_df["response"] == "ACTIVITY")
+        & (ml_df["feature"] == "topo")
+        & (ml_df["context"] == "C")
+        & (ml_df["model"] == "SVR")
+        & (ml_df["timepoint"] == 0)
+    ]
+    c_activity_rows.insert(loc=6, column="emulator", value="ml")
+    c_growth_rows = ml_df[
+        (ml_df["response"] == "GROWTH")
+        & (ml_df["feature"] == "topo")
+        & (ml_df["context"] == "C")
+        & (ml_df["model"] == "RF")
+        & (ml_df["timepoint"] == 0)
+    ]
+    c_growth_rows.insert(loc=6, column="emulator", value="ml")
+    c_symmetry_rows = ml_df[
+        (ml_df["response"] == "SYMMETRY")
+        & (ml_df["feature"] == "topo")
+        & (ml_df["context"] == "C")
+        & (ml_df["model"] == "MLR")
+        & (ml_df["timepoint"] == 0)
+    ]
+    c_symmetry_rows.insert(loc=6, column="emulator", value="ml")
+    ch_activity_rows = ml_df[
+        (ml_df["response"] == "ACTIVITY")
+        & (ml_df["feature"] == "topo")
+        & (ml_df["context"] == "CH")
+        & (ml_df["model"] == "RF")
+        & (ml_df["timepoint"] == 0)
+    ]
+    ch_activity_rows.insert(loc=6, column="emulator", value="ml")
+    ch_growth_rows = ml_df[
+        (ml_df["response"] == "GROWTH")
+        & (ml_df["feature"] == "topo")
+        & (ml_df["context"] == "CH")
+        & (ml_df["model"] == "SVR")
+        & (ml_df["timepoint"] == 0)
+    ]
+    ch_growth_rows.insert(loc=6, column="emulator", value="ml")
+    ch_symmetry_rows = ml_df[
+        (ml_df["response"] == "SYMMETRY")
+        & (ml_df["feature"] == "topo")
+        & (ml_df["context"] == "CH")
+        & (ml_df["model"] == "RF")
+        & (ml_df["timepoint"] == 0)
+    ]
+    ch_symmetry_rows.insert(loc=6, column="emulator", value="ml")
+
+    rnn_df = rnn_df.append(
+        [
+            c_activity_rows,
+            c_growth_rows,
+            c_symmetry_rows,
+            ch_activity_rows,
+            ch_growth_rows,
+            ch_symmetry_rows,
+        ]
+    )
+    rnn_df.to_csv("data/predicted/rnn_parity_full.csv", index=False)
 
 
 if __name__ == "__main__":
     # combine_model_csvs()
     # combine_bar_plots_r_sqaures()
-    explode_ci()
+    # explode_ci()
     # format_floats()
     # parity_plot_data()
     # format_parity()
+    combine_parity()
