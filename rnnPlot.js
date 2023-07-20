@@ -18,6 +18,7 @@ let rawData;
 
 let plotType = "bar";
 let context = "C";
+let contexts = ["C", "CH"];
 let response = "ACTIVITY";
 let responses = ["ACTIVITY", "GROWTH", "SYMMETRY"];
 
@@ -48,7 +49,7 @@ const render = () => {
 
             // Create a new link element
             const link = document.createElement('a');
-            link.download = "rnn_plot_" + plotType + "_" + response + "_" + context + ".svg";
+            link.download = "rnn_plot_" + plotType + "_" + response + ".svg";
             link.href = url;
 
             // Simulate a click on the link element to trigger the download
@@ -72,18 +73,35 @@ const render = () => {
             }
         });
 
-    const filterData = (dataset) => {
-        const filteredDataset = dataset.filter((row) => {
-            let contextMatch = row["context"] === context;
-            let responseMatch = row["response"] === response;
+    let filteredData;
+    if (plotType === "parity") {
+        const filterData = (dataset) => {
+            const filteredDataset = dataset.filter((row) => {
+                let setMatch = row["context"] === context;
+                let responseMatch = row["response"] === response;
 
-            return contextMatch && responseMatch;
-        });
+                return setMatch && responseMatch;
+            });
 
-        return filteredDataset;
-    };
+            return filteredDataset;
+        };
 
-    let filteredData = filterData(rawData);
+        filteredData = filterData(rawData);
+    } else if (plotType === "bar") {
+        const filterData = (dataset) => {
+            const filteredDataset = dataset.filter((row) => {
+                let setMatch = row["set"] === "TEST";
+                let responseMatch = row["response"] === response;
+
+                return setMatch && responseMatch;
+            });
+
+            return filteredDataset;
+        };
+
+        filteredData = filterData(rawData);
+    }
+
 
 
     // Plot
@@ -102,7 +120,7 @@ const render = () => {
             innerHeight: innerHeight,
             data: filteredData,
             r2Data: [],
-            showXAxis: true,
+            showXAxis: showYAxis,
             showYAxis: showYAxis,
             time: 0,
             showInitial: false,
@@ -114,7 +132,6 @@ const render = () => {
             innerWidth: innerWidth,
             innerHeight: innerHeight,
             margin: { top: 60, right: 40, bottom: 88, left: 150 },
-            context: context,
             showYAxis: showYAxis
         });
     };
@@ -136,21 +153,16 @@ const dataPromise = loadRnnBarData(dataPath).then(newData => {
 });
 Promise.all([dataPromise]).then(() => { render(); });
 
-
-// Get the radio buttons
-const cRadio = document.getElementById('c-radio');
-const chRadio = document.getElementById('ch-radio');
-
 const parityRadio = document.getElementById('parity-radio');
 const barRadio = document.getElementById('bar-radio');
 
-const onContextClicked = event => {
-    context = event.target.value;
+const onResponseClicked = resp => {
+    response = resp;
     render();
 };
 
-const onResponseClicked = resp => {
-    response = resp;
+const onContextClicked = event => {
+    context = event.target.value;
     render();
 };
 
@@ -172,9 +184,11 @@ const onPlotTypeClicked = event => {
     render();
 };
 
-// Add event listener to radio buttons
-cRadio.addEventListener('change', onContextClicked);
-chRadio.addEventListener('change', onContextClicked);
-
 parityRadio.addEventListener('change', onPlotTypeClicked);
 barRadio.addEventListener('change', onPlotTypeClicked);
+
+const cRadio = document.getElementById('c-radio');
+const chRadio = document.getElementById('ch-radio');
+
+cRadio.addEventListener('change', onContextClicked);
+chRadio.addEventListener('change', onContextClicked);

@@ -171,7 +171,8 @@ const render = () => {
         data: filteredData,
         type: "temporal",
         showXAxis: showXAxis,
-        showYAxis: showYAxis
+        showYAxis: showYAxis,
+        includeCH: true
     });
 
     svg.append("rect")

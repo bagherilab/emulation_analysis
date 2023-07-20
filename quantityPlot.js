@@ -165,7 +165,7 @@ const render = () => {
             } else if (showSData) {
                 featureMatch = row["feature"] === "spatial";
             }
-            return modelMatch && responseMatch && contextMatch && featureMatch && timeMatch;
+            return modelMatch && responseMatch && featureMatch && timeMatch;
         });
 
         return filteredDataset;
@@ -187,7 +187,8 @@ const render = () => {
         data: filteredData,
         type: "quantity",
         showXAxis: showXAxis,
-        showYAxis: showYAxis
+        showYAxis: showYAxis,
+        includeCH: true
     });
 
     svg.append("rect")
