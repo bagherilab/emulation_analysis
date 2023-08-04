@@ -1,1 +1,0 @@
-{"alpha": 0.5623413251903494, "activation": "relu", "hidden_layer_sizes": [5, 5], "solver": "lbfgs", "max_iter": 1000}
