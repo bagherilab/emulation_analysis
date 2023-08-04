@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>PCA Plots</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/d3@5.6.0/dist/d3.min.js"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</head>
+
+<body>
+    <p>Previous page:</p>
+    <button onclick="goBack()">Go back</button>
+    <div id="menus">
+        PCA:
+        <span id="pca-menu"></span>
+        Context:
+        <span id="context-menu"></span>
+    </div>
+
+    <div id="axes">
+        X-axis:
+        <span id="x-check"></span>
+        Y-axis:
+        <span id="y-check"></span>
+    </div>
+
+    <svg width="800" height="800"></svg>
+    <script type="module" src="pcaPlot.js"></script>
+</body>
+
+</html>

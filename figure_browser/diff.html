@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Bar Plots</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/d3@5.6.0/dist/d3.min.js"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</head>
+
+<body>
+    <p>Previous page:</p>
+    <button onclick="goBack()">Go back</button>
+    <div id="menus">
+        Response:
+        <span id="response-menu"></span>
+        Model:
+        <span id="model-menu"></span>
+        End timepoint:
+        <span id="time-menu"></span>
+    </div>
+
+    <div id="radio">
+        C:
+        <input type="radio" name="context" value="C" id="c-radio" checked>
+        CH:
+        <input type="radio" name="context" value="CH" id="ch-radio">
+    </div>
+
+    <div id="axes">
+        Y-axis:
+        <span id="y-check"></span>
+    </div>
+
+    <svg width="800" height="800"></svg>
+    <script type="module" src="diffBarPlot.js"></script>
+</body>
+
+</html>
