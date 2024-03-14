@@ -5,7 +5,7 @@ import {
 import { dropDownMenu } from './dropdown.js';
 import { checkBox } from './checkbox.js';
 import { linePlot } from './plotting.js';
-import { loadTemporalData } from './csvLoader.js';
+import { loadTemporalData, loadGenericData } from './csvLoader.js';
 
 const svg = select('svg');
 
@@ -20,6 +20,7 @@ let showXAxis = true;
 let showYAxis = true;
 
 let rawData;
+let rawDataSig;
 
 let features = "topo";
 let response = "ACTIVITY";
@@ -28,6 +29,7 @@ let model = "MLR";
 let models = ["MLR", "RF", "SVR", "MLP"];
 
 let dataPath = "data/predicted/temporal.csv"
+let sigPath = "data/predicted/temporal_sig.csv"
 
 const saveButtonId = 'saveButton';
 
@@ -42,6 +44,22 @@ const render = () => {
             // Get the SVG element
             const svgElement = document.querySelector('svg');
 
+            const leftPatternDef = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            leftPatternDef.innerHTML = `
+        <pattern id="left-diagonal-stripe" patternUnits="userSpaceOnUse" width="30" height="30">
+            <rect width="30" height="30" fill="none" />
+            <line x1="0" y1="0" x2="30" y2="30" stroke="#CCCCCC" stroke-width="3" />
+        </pattern>`;
+            svgElement.appendChild(leftPatternDef);
+
+            const rightPatternDef = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            rightPatternDef.innerHTML = `
+        <pattern id="right-diagonal-stripe" patternUnits="userSpaceOnUse" width="30" height="30">
+            <rect width="30" height="30" fill="none" />
+            <line x1="0" y1="30" x2="30" y2="0" stroke="#8cd5f5" stroke-width="3" />
+        </pattern>`;
+
+            svgElement.appendChild(rightPatternDef);
             // Get the SVG markup
             const svgMarkup = new XMLSerializer().serializeToString(svgElement);
 
@@ -129,8 +147,21 @@ const render = () => {
         return filteredDataset;
     };
 
+    const filterDataSig = (dataset) => {
+        const filteredDataset = dataset.filter((row, index) => {
+            let modelMatch = row["model"] === model;
+            let responseMatch = row["response"] === response;
+
+            return modelMatch && responseMatch;
+        });
+
+        return filteredDataset;
+    };
+
 
     let filteredData = filterData(rawData);
+    let filteredDataSig = filterDataSig(rawDataSig);
+
 
     // Plot
     const margin = { top: 60, right: 40, bottom: 88, left: 150 }
@@ -143,6 +174,7 @@ const render = () => {
         innerWidth: innerWidth,
         innerHeight: innerHeight,
         data: filteredData,
+        dataSig: filteredDataSig,
         type: "temporal",
         showXAxis: showXAxis,
         showYAxis: showYAxis,
@@ -164,8 +196,12 @@ const render = () => {
 const dataPromise = loadTemporalData(dataPath).then(newData => {
     rawData = newData;
 });
-Promise.all([dataPromise]).then(() => { render(); });
 
+const dataPromise2 = loadGenericData(sigPath).then(newDataSig => {
+    rawDataSig = newDataSig;
+});
+
+Promise.all([dataPromise, dataPromise2]).then(() => { render(); });
 
 const onResponseClicked = resp => {
     response = resp;

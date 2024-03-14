@@ -2,6 +2,13 @@ import {
     csv,
 } from 'https://cdn.skypack.dev/d3@5.16.0';
 
+export const loadGenericData = (data_path) => {
+    return csv(data_path).then(loadedData => {
+        const data = loadedData;
+        return data;
+    })
+};
+
 export const loadParityData = (data_path) => {
     return csv(data_path).then(loadedData => {
         const data = loadedData;
@@ -68,6 +75,16 @@ export const loadR2Data = (data_path) => {
         data.forEach(d => {
             d["R^2"] = +d["R^2"];
             d["timepoint"] = +d["timepoint"];
+        });
+        return data;
+    })
+};
+
+export const loadTrainingBarData = (data_path) => {
+    return csv(data_path).then(loadedData => {
+        const data = loadedData;
+        data.forEach(d => {
+            d["r2"] = +d["r2"];
         });
         return data;
     })

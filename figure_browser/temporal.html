@@ -35,7 +35,27 @@
         <span id="y-check"></span>
     </div>
 
+
     <svg width="800" height="800"></svg>
+
+    <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+        <defs>
+            <pattern id="left-diagonal-stripe" patternUnits="userSpaceOnUse" width="30" height="30">
+                <rect width="30" height="30" fill="none" />
+                <line x1="0" y1="0" x2="30" y2="30" stroke="#CCCCCC" stroke-width="3" />
+            </pattern>
+        </defs>
+    </svg>
+
+    <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+        <defs>
+            <pattern id="right-diagonal-stripe" patternUnits="userSpaceOnUse" width="30" height="30">
+                <rect width="30" height="30" fill="none" />
+                <line x1="0" y1="30" x2="30" y2="0" stroke="#8cd5f5" stroke-width="3" stroke-linecap="square" />
+            </pattern>
+        </defs>
+    </svg>
+
     <script type="module" src="temporalPlot.js"></script>
 </body>
 

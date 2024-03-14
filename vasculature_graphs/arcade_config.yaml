@@ -1,0 +1,23 @@
+parsing:
+    network: True
+network_parsing:
+    edge_weights:
+        - none
+        - inverse_distance
+        - flow
+        - wall
+        - shear
+        - radius
+        - pressure_avg
+        - pressure_delta
+        - oxygen_avg
+        - oxygen_delta
+    vasc_types:
+        - Lav
+        # - Lava
+        # - Lvav
+        # - Sav
+        # - Savav
+experiments:
+    VF_C_:
+    VF_CH_:

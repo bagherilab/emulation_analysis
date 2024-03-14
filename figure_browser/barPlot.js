@@ -69,7 +69,7 @@ const render = () => {
         const filteredDataset = dataset.filter((row) => {
             let modelMatch = row["model"] === model;
             let contextMatch = row["context"] === context;
-            let timeMatch = parseInt(row["timepoint"]) === 0;
+            let timeMatch = parseInt(row["timepoint"]) === 15;
 
             return modelMatch && contextMatch && timeMatch;
         });

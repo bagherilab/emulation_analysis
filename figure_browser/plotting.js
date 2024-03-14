@@ -73,9 +73,9 @@ export const parityPlot = (selection, props) => {
                     if (d.feature === "naive") {
                         d3.select(this).append('circle')
                             .attr('class', 'circle')
-                            .attr('r', circleRadius / 1.5)
+                            .attr('r', circleRadius * 2)
                             .attr('fill', d => d.set === "train" ? "none" : getColor("C-naive-TEST"))
-                            .attr('stroke', d => d.set === "train" ? getColor("C-naive-TRAIN") : "none")
+                            .attr('stroke', d => d.set === "train" ? "none" : "none") // getColor("C-naive-TRAIN")
                             .attr('stroke-width', 2);
                     } else if (d.feature === "topo") {
                         d3.select(this).append('rect')
@@ -85,14 +85,14 @@ export const parityPlot = (selection, props) => {
                             .attr('width', circleRadius * 1.5)
                             .attr('height', circleRadius * 1.5)
                             .attr('fill', d => d.set === "train" ? "none" : getColor("C-naive-TEST"))
-                            .attr('stroke', d => d.set === "train" ? getColor("C-naive-TRAIN") : "none")
+                            .attr('stroke', d => d.set === "train" ? "none" : "none")
                             .attr('stroke-width', d => d.set === "train" ? 2 : 0);
                     } else if (d.feature === "spatial") {
                         d3.select(this).append('polygon')
                             .attr('class', 'triangle')
-                            .attr('points', `${-circleRadius / 1.5},${circleRadius / 1.5} ${circleRadius / 1.5},${circleRadius / 1.5} 0,${-circleRadius * 1}`)
+                            .attr('points', `${-circleRadius / 1.5},${circleRadius / 1.5} ${circleRadius / 1.5},${circleRadius / 1.5} 0,${-circleRadius / 1.5}`)
                             .attr('fill', d => d.set === "train" ? "none" : getColor("C-naive-TEST"))
-                            .attr('stroke', d => d.set === "train" ? getColor("C-naive-TRAIN") : "none")
+                            .attr('stroke', d => d.set === "train" ? "none" : "none")
                             .attr('stroke-width', 2);
                     }
                 }
@@ -121,51 +121,51 @@ export const parityPlot = (selection, props) => {
     }
 
     // Training points
-    markers.enter().append('g')
-        .attr('class', '.dot')
-        .merge(markers)
-        .attr('transform', d => `translate(${xScale(xValue(d))},${yScale(yValue(d))})`)
-        .each(function (d) {
-            if (d.timepoint === parseInt(time)) {
-                if (d.set.toUpperCase() === "TRAIN") {
-                    if (d.feature === "naive") {
-                        d3.select(this).append('circle')
-                            .attr('class', 'circle')
-                            .attr('r', circleRadius / 1.5)
-                            .attr('fill', "none")
-                            .attr('stroke', getColor(d.context + "-naive-" + d.set.toUpperCase()))
-                            .attr('stroke-width', 2);
-                    } else if (d.feature === "topo" || d.feature === "diff") {
-                        d3.select(this).append('rect')
-                            .attr('class', 'square')
-                            .attr('x', -circleRadius)
-                            .attr('y', -circleRadius)
-                            .attr('width', circleRadius * 1.5)
-                            .attr('height', circleRadius * 1.5)
-                            .attr('fill', "none")
-                            .attr('stroke', getColor(d.context + "-topo-" + d.set.toUpperCase()))
-                            .attr('stroke-width', 2);
-                    } else if (d.feature === "spatial") {
-                        d3.select(this).append('polygon')
-                            .attr('class', 'triangle')
-                            .attr('points', `${-circleRadius / 1.5},${circleRadius / 1.5} ${circleRadius / 1.5},${circleRadius / 1.5} 0,${-circleRadius * 1}`)
-                            .attr('fill', "none")
-                            .attr('stroke', getColor(d.context + "-spatial-" + d.set.toUpperCase()))
-                            .attr('stroke-width', 2);
-                    } else if (d.feature === "syntopo" && d.emulator === "rnn") {
-                        d3.select(this).append('rect')
-                            .attr('class', 'square')
-                            .attr('x', -circleRadius)
-                            .attr('y', -circleRadius)
-                            .attr('width', circleRadius * 1.5)
-                            .attr('height', circleRadius * 1.5)
-                            .attr('fill', "none")
-                            .attr('stroke', getRnnColor("rnn-train"))
-                            .attr('stroke-width', 2);
-                    }
-                }
-            }
-        });
+    // markers.enter().append('g')
+    //     .attr('class', '.dot')
+    //     .merge(markers)
+    //     .attr('transform', d => `translate(${xScale(xValue(d))},${yScale(yValue(d))})`)
+    //     .each(function (d) {
+    //         if (d.timepoint === parseInt(time)) {
+    //             if (d.set.toUpperCase() === "TRAIN") {
+    //                 if (d.feature === "naive") {
+    //                     d3.select(this).append('circle')
+    //                         .attr('class', 'circle')
+    //                         .attr('r', circleRadius)
+    //                         .attr('fill', "none")
+    //                         .attr('stroke', getColor(d.context + "-naive-" + d.set.toUpperCase()))
+    //                         .attr('stroke-width', 2);
+    //                 } else if (d.feature === "topo" || d.feature === "diff") {
+    //                     d3.select(this).append('rect')
+    //                         .attr('class', 'square')
+    //                         .attr('x', -circleRadius)
+    //                         .attr('y', -circleRadius)
+    //                         .attr('width', circleRadius)
+    //                         .attr('height', circleRadius)
+    //                         .attr('fill', "none")
+    //                         .attr('stroke', getColor(d.context + "-topo-" + d.set.toUpperCase()))
+    //                         .attr('stroke-width', 2);
+    //                 } else if (d.feature === "spatial") {
+    //                     d3.select(this).append('polygon')
+    //                         .attr('class', 'triangle')
+    //                         .attr('points', `${-circleRadius / 2},${circleRadius / 2} ${circleRadius / 2},${circleRadius / 2} 0,${-circleRadius / 2}`)
+    //                         .attr('fill', "none")
+    //                         .attr('stroke', getColor(d.context + "-spatial-" + d.set.toUpperCase()))
+    //                         .attr('stroke-width', 2);
+    //                 } else if (d.feature === "syntopo" && d.emulator === "rnn") {
+    //                     d3.select(this).append('rect')
+    //                         .attr('class', 'square')
+    //                         .attr('x', -circleRadius)
+    //                         .attr('y', -circleRadius)
+    //                         .attr('width', circleRadius * 1.5)
+    //                         .attr('height', circleRadius * 1.5)
+    //                         .attr('fill', "none")
+    //                         .attr('stroke', getRnnColor("rnn-train"))
+    //                         .attr('stroke-width', 2);
+    //                 }
+    //             }
+    //         }
+    //     });
 
     // Test points
     markers.enter().append('g')
@@ -603,7 +603,7 @@ export const barPlot = (selection, props) => {
     if (showYAxis) {
         // R2 ticks
         yAxis = d3.axisLeft(yScale)
-            .tickValues([-0.1, 0.0, 0.5, 1.0])
+            .tickValues([0.0, 1.0])
             .tickSize(0)
             .tickPadding(10);
 
@@ -641,6 +641,7 @@ export const linePlot = (selection, props) => {
         innerWidth,
         innerHeight,
         data,
+        dataSig = null,
         type,
         showXAxis,
         showYAxis,
@@ -680,15 +681,65 @@ export const linePlot = (selection, props) => {
         .range([innerHeight, 0])
         .nice();
 
-    // const zeroLine = g.merge(gEnter)
-    //     .append("line")
-    //     .attr("class", "zero-line")
-    //     .attr("x1", 0)
-    //     .attr("x2", innerWidth)
-    //     .attr("y1", yScale(0))
-    //     .attr("y2", yScale(0))
-    //     .attr("stroke", "black")
-    //     .attr("stroke-width", 1);
+    if (dataSig) {
+        const sigData = dataSig.filter(d => d.context === "C")[0];
+        const sigDataCH = dataSig.filter(d => d.context === "CH")[0];
+
+        const pvalues = Array.isArray(sigData.pvalues) ? sigData.pvalues : JSON.parse(sigData.pvalues);
+        const pvaluesCH = Array.isArray(sigDataCH.pvalues) ? sigDataCH.pvalues : JSON.parse(sigDataCH.pvalues);
+
+        const shadingData = pvalues.map((pvalue, index) => ({
+            pvalue,
+            timepoint: index
+        })).filter(item => item.pvalue < (0.01 / 24));
+
+        const shadingDataCH = pvaluesCH.map((pvalue, index) => ({
+            pvalue,
+            timepoint: index
+        })).filter(item => item.pvalue < (0.01 / 24));
+
+        const shadingPolygons = g.merge(gEnter)
+            .selectAll('.shading-polygon')
+            .data(shadingData, d => d.timepoint);
+
+        const shadingPolygonsCH = g.merge(gEnter)
+            .selectAll('.shading-polygon')
+            .data(shadingDataCH, d => d.timepoint);
+
+        shadingPolygons.exit().remove();
+        shadingPolygonsCH.exit().remove();
+
+        shadingPolygons.enter().append('rect')
+            .attr('class', 'shading-polygon')
+            .merge(shadingPolygons)
+            .attr('x', d => {
+                const xPos = xScale(d.timepoint - 0.5);
+                return xPos < innerWidth ? xPos : innerWidth; // Ensure the x-coordinate does not exceed innerWidth
+            })
+            .attr('y', 0)
+            .attr('width', d => {
+                const rectWidth = Math.min(xScale(1) - xScale(0), innerWidth - xScale(d.timepoint - 0.5));
+                return rectWidth > 0 ? rectWidth : 0; // Set width to 0 if it becomes negative
+            })
+            .attr('height', innerHeight)
+            .attr('fill', "url('#right-diagonal-stripe')");
+
+        shadingPolygonsCH.enter().append('rect')
+            .attr('class', 'shading-polygon')
+            .merge(shadingPolygonsCH)
+            .attr('x', d => {
+                const xPos = xScale(d.timepoint - 0.5);
+                return xPos < innerWidth ? xPos : innerWidth; // Ensure the x-coordinate does not exceed innerWidth
+            })
+            .attr('y', 0)
+            .attr('width', d => {
+                const rectWidth = Math.min(xScale(1) - xScale(0), innerWidth - xScale(d.timepoint - 0.5));
+                return rectWidth > 0 ? rectWidth : 0; // Set width to 0 if it becomes negative
+            })
+            .attr('height', innerHeight)
+            .attr('fill', "url('#left-diagonal-stripe')");
+    };
+
 
     // Clip path
     g.merge(gEnter)
@@ -701,9 +752,8 @@ export const linePlot = (selection, props) => {
         .attr("width", innerWidth)
         .attr("height", innerHeight);
 
-    // Data points
-    const dataPointRadius = 5;
 
+    const dataPointRadius = 5;
     const circleGenerator = d3.symbol().type(d3.symbolCircle).size(dataPointRadius * dataPointRadius);
 
     const testPointsData = sortedData.flatMap(d => {
@@ -798,7 +848,6 @@ export const linePlot = (selection, props) => {
             .attr("clip-path", "url(#clip-path)");
     }
 
-
     let xAxis;
     if (showXAxis) {
         if (type === "quantity") {
@@ -827,7 +876,7 @@ export const linePlot = (selection, props) => {
     if (showYAxis) {
         // R2 ticks
         // yAxis = axisLeft(yScale)
-        //     .tickValues([-0.1, 0.0, 0.5, 1.0])
+        //     .tickValues([0.0, 0.5, 1.0])
         //     .tickFormat(d3.format(".1f"))
         //     .tickSize(3)
         //     .tickPadding(10);
@@ -870,6 +919,163 @@ export const linePlot = (selection, props) => {
         .attr("font-size", "80px");
 };
 
+export const trainingBarPlot = (selection, props) => {
+    const {
+        data,
+        innerWidth,
+        innerHeight,
+        margin,
+        showYAxis,
+        showXAxis
+    } = props;
+
+    const trainData = data.filter(d => d.set === "TRAIN");
+    const testData = data.filter(d => d.set === "TEST");
+
+    // Create histogram bins based on r2 values
+    const histogram = d3.histogram()
+        .value(d => d.r2)
+        .domain([-0.2, 1])
+        .thresholds(d3.range(-0.2, 1.1, 0.1));
+
+    const bins = histogram(trainData);
+
+    // Define the x and y scales
+    const xScale = d3
+        .scaleBand()
+        .domain(bins.map(d => `${d.x0}-${d.x1}`))
+        .range([0, innerWidth])
+        .padding(0.1);
+
+    const yScale = d3
+        .scaleLinear()
+        .domain([0, d3.max(bins, d => d.length)])
+        .range([innerHeight, 0])
+        .nice();
+
+    selection.selectAll('*').remove();
+
+    const g = selection.selectAll('.container').data([null]);
+
+    const gEnter = g.enter().append('g')
+        .attr('class', 'container');
+    gEnter.merge(g)
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const bars = g.merge(gEnter)
+        .selectAll(".bar")
+        .data(bins);
+
+    bars.exit().remove();
+    // testLine.exit().remove();
+
+    bars.enter()
+        .append("g")
+        .merge(bars)
+        .each(function (d, i) {
+            const barWidth = xScale.bandwidth() + 4;
+            const barHeight = innerHeight - yScale(d.length);
+
+            d3.select(this)
+                .append("rect")
+                .attr("class", "train-bar")
+                .attr("x", xScale(`${d.x0}-${d.x1}`))
+                .attr("y", yScale(d.length))
+                .attr("width", barWidth)
+                .attr("height", barHeight)
+                .attr("fill", getColor("C-topo-TRAIN"))
+                .attr("stroke", "black")
+                .attr("stroke-width", 3);
+        });
+
+    let yAxis;
+    if (showYAxis) {
+        // R2 ticks
+        yAxis = d3.axisLeft(yScale)
+            .ticks(3)
+            .tickSize(0)
+            .tickPadding(10);
+    } else {
+        yAxis = d3.axisLeft(yScale)
+            .tickValues([])
+            .tickSize(0)
+            .tickPadding(0);
+    }
+
+    const yAxisG = g.select('.y-axis');
+    const yAxisGEnter = gEnter
+        .append('g')
+        .attr("class", "y-axis")
+        .call(d3.axisLeft(yScale))
+        .attr("font-size", "50px");
+
+    yAxisG
+        .merge(yAxisGEnter)
+        .call(yAxis)
+        .selectAll('.tick line')
+        .remove();
+
+
+    // Define the range for the separate x-axis
+    const xScaleSeparate = d3.scaleLinear()
+        .domain([-0.2, 1])
+        .range([0, innerWidth]);
+
+    // Create a separate axis for the range -0.2 to 1
+    const xAxisSeparate = d3.axisBottom(xScaleSeparate)
+        .tickValues([-0.2, 0, 0.5, 1])
+        .tickSize(0)
+        .tickPadding(10);
+
+    // Append the separate x-axis to the main SVG element
+    const xAxisSeperateG = g.select('.x-axis-seperate')
+    const xAxisContainer = gEnter.append("g")
+        .attr("class", "x-axis-separate")
+        .attr('transform', `translate(${margin.left},${innerHeight + margin.top + 60})`)
+        .attr("font-size", "50px");
+
+    // Calculate the testR2 value
+    const testR2 = d3.mean(testData, d => d.r2);
+
+    // Create the line on the separate axis within the main figure
+    const testLineSeparate = gEnter.append("line")
+        .attr("class", "test-line")
+        .attr("x1", xScaleSeparate(testR2))
+        .attr("x2", xScaleSeparate(testR2))
+        .attr("y1", 0) // Adjust the y-coordinate as needed
+        .attr("y2", innerHeight) // Adjust the y-coordinate as needed
+        .attr("stroke", "gray")
+        .attr("stroke-width", 5)
+        .attr("stroke-dasharray", "10,5");
+
+    if (showXAxis) {
+        selection.select('.x-axis').remove();
+
+        // Create a disconnected x-axis separately
+        const xAxisContainer = selection.append("g")
+            .attr("class", "x-axis-container")
+            .attr('transform', `translate(${margin.left},${innerHeight + margin.top + 60})`);
+
+        const tickValues = [-0.2, "0.0", 0.2, 0.4, 0.6, 0.8, "1.0"];
+        tickValues.forEach((value, index) => {
+            let xDist;
+            if (index === 0) {
+                xDist = -50;
+            } else if (index === tickValues.length - 1) {
+                xDist = innerWidth + 28;
+            } else {
+                xDist = index / (tickValues.length - 1) * innerWidth;
+            }
+            xAxisContainer.append("text")
+                .attr("x", xDist)
+                .attr("y", 7) // Adjust the value here to move the numbers down
+                .text(value)
+                .attr("font-size", "50px")
+                .attr("text-anchor", index === 0 ? "start" : index === tickValues.length - 1 ? "end" : "middle");
+        });
+    }
+};
+
 export const rnnBarPlot = (selection, props) => {
     const {
         data,
@@ -892,7 +1098,7 @@ export const rnnBarPlot = (selection, props) => {
     // RMSE scale
     const yScale = d3
         .scaleLinear()
-        .domain([0.0, 0.43])
+        .domain([0.0, 0.63])
         .range([innerHeight, 0])
         .nice();
 
@@ -901,8 +1107,8 @@ export const rnnBarPlot = (selection, props) => {
         .key(d => d.context)
         .key(d => d.emulator)
         .rollup(group => {
-            const mean = d3.mean(group, d => d['rmse']);
-            const se = d3.mean(group, d => d['rmse_se']);
+            const mean = d3.mean(group, d => d['r2']);
+            const se = d3.mean(group, d => d['r2_se']);
             return { mean, se };
         })
         .entries(data);
@@ -1047,7 +1253,8 @@ export const rnnBarPlot = (selection, props) => {
     if (showYAxis) {
         // RMSE ticks
         yAxis = d3.axisLeft(yScale)
-            .ticks(3)
+            // .ticks(3)
+            .tickValues([0.0, 1.0])
             .tickFormat(d3.format(".1f"))
             .tickSize(0)
             .tickPadding(10);
@@ -1461,7 +1668,6 @@ export const parityPCAPlot = (selection, props) => {
         .attr("font-size", "70px");
 
 };
-
 
 const getColor = key => {
     const colorMap = {
