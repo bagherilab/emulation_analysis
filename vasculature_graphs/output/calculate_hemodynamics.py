@@ -2,7 +2,7 @@ from typing import Tuple, Optional, Any
 
 import pandas as pd
 
-from vasculature_graphs.output.data_classes import Hemodynamics
+from output.data_classes import Hemodynamics
 
 
 def calculate_hemodynamics(df: pd.DataFrame) -> Hemodynamics:

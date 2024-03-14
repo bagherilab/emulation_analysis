@@ -5,9 +5,9 @@ import yaml
 
 import pandas as pd
 
-from vasculature_graphs.network.parse_network import parse_network_arcade
-from vasculature_graphs.output.parse_output import parse_output_arcade
-from vasculature_graphs.utils.reformat import format_df
+from network.parse_network import parse_network_arcade
+from output.parse_output import parse_output_arcade
+from utils.reformat import format_df
 
 DATE = "04022023"
 METRIC_TPS = [8, 15]
@@ -47,10 +47,11 @@ EXCLUDE = [
 
 def parse() -> None:
     """
-    Parses raw ARCADE .GRAPH.json files into condensed .csv files with graph metrics
-    that are used by the rest of the pipeline.
+    Entry point for the graph parsing process. This function will read the arcade_config.yaml
+    and parse through the network .csv files in the data/ directory. It will then save the
+    computed metrics to a .csv file in the data/ directory.
     """
-    with open("src/vasculature_graphs/arcade_config.yaml", "r", encoding="utf-8") as f:
+    with open("arcade_config.yaml", "r", encoding="utf-8") as f:
         configs = yaml.safe_load(f)
         parsing_network_flag = configs["parsing"]["network"]
 
@@ -67,7 +68,7 @@ def parse_networks(uid: str = "") -> None:
     Each experiment will have it's data saved to a seperate csv on s3.
 
     """
-    with open("src/vasculature_graphs/arcade_config.yaml", "r", encoding="utf-8") as f:
+    with open("arcade_config.yaml", "r", encoding="utf-8") as f:
         configs = yaml.safe_load(f)
         experiments = configs["experiments"]
         network_parsing = configs["network_parsing"]
@@ -76,7 +77,7 @@ def parse_networks(uid: str = "") -> None:
         print(f"Starting network parsing on {experiment} files...")
         experiment_df = pd.DataFrame()
         aggregate_hemodynamics_df = pd.DataFrame()
-        data_dir = f"src/vasculature_graphs/data"
+        data_dir = f"data"
 
         data_files_list = os.listdir("data")
         for file_name in data_files_list:

@@ -6,7 +6,7 @@ import yaml
 import pandas as pd
 import numpy as np
 
-from vasculature_graphs.output.calculate_hemodynamics import calculate_hemodynamics
+from output.calculate_hemodynamics import calculate_hemodynamics
 
 
 def parse_output_arcade(sim_file: str) -> pd.DataFrame:

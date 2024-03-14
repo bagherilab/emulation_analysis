@@ -3,7 +3,7 @@ from typing import Tuple, Optional, Any
 import igraph as ig
 import numpy as np
 
-from vasculature_graphs.network.data_classes import GraphMetrics
+from network.data_classes import GraphMetrics
 
 CENTER = (238 / 2, 158 / 2)
 

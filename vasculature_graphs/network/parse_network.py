@@ -5,7 +5,7 @@ import h5py
 import pandas as pd
 import numpy as np
 
-from vasculature_graphs.network.calculate_graph_metrics import igraph_graph_metrics
+from network.calculate_graph_metrics import igraph_graph_metrics
 
 CENTER = (238 / 2, 158 / 2)
 
